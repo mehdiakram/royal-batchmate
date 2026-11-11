@@ -1,0 +1,29 @@
+# WordPress & local dev
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node / build tools
+node_modules/
+npm-debug.log*
+yarn-error.log
+
+# Composer
+vendor/
+
+# IDE / editors
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Local config overrides
+*.local.php
+local-config.php
+*.bat
+
+# Compiled / generated assets
+*.min.map
+
+# License cache (generated at runtime)
+license/ccsld.json

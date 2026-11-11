@@ -1,0 +1,86 @@
+# Translation template for Royal BatchMate
+# Copyright (C) 2026 Royal Technologies
+msgid ""
+msgstr ""
+"Project-Id-Version: Royal BatchMate\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-11 00:00+0600\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Birthday Card Template"
+msgstr ""
+
+msgid "Select Card Design"
+msgstr ""
+
+msgid "Birthday Card 1 (Midnight Royal & Gold)"
+msgstr ""
+
+msgid "Birthday Card 2 (Crimson & Rose Gold)"
+msgstr ""
+
+msgid "Birthday Card 3 (Emerald & Gold)"
+msgstr ""
+
+msgid "Live Canvas Preview:"
+msgstr ""
+
+msgid "Re-generate Preview"
+msgstr ""
+
+msgid "Pure GD canvas template rendered dynamically in 1080x1080 square format."
+msgstr ""
+
+msgid "Card Subtitle / Badge Display"
+msgstr ""
+
+msgid "Choose what text appears below the member name on the card. Select <strong>None / Hidden</strong> to omit any subtitle."
+msgstr ""
+
+msgid "None / Hidden"
+msgstr ""
+
+msgid "Batch (e.g. Batch 1999)"
+msgstr ""
+
+msgid "Department / Group (e.g. Science)"
+msgstr ""
+
+msgid "Profession / Designation"
+msgstr ""
+
+msgid "Blood Group (e.g. Blood: B+)"
+msgstr ""
+
+msgid "Program"
+msgstr ""
+
+msgid "Custom Text"
+msgstr ""
+
+msgid "Custom badge text (e.g. SSC 99 Batchmate)"
+msgstr ""
+
+msgid "Leave empty to omit subtitle. You can also configure this automatically in Settings #automation."
+msgstr ""
+
+msgid "Generating Canvas Preview..."
+msgstr ""
+
+msgid "Rendering..."
+msgstr ""
+
+msgid "Card Preview"
+msgstr ""
+
+msgid "Settings saved successfully."
+msgstr ""
+
+msgid "Failed to generate 1080x1080 card image."
+msgstr ""
+
+msgid "1080x1080 card generated successfully!"
+msgstr ""
+

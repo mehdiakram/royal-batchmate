@@ -1,0 +1,446 @@
+/* Royal BatchMate - Admin Settings Styles */
+.BatchMate-about-grid { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; }
+.BatchMate-about-item { display: flex; align-items: flex-start; gap: 15px; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; transition: transform 0.2s, box-shadow 0.2s; }
+.BatchMate-about-item:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+.BatchMate-about-icon { background: #e0e7ff; color: #4f46e5; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; }
+.BatchMate-about-icon .dashicons { font-size: 20px; width: 20px; height: 20px; }
+.BatchMate-about-content h4 { margin: 0 0 4px 0; font-size: 14px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.BatchMate-about-content p, .BatchMate-about-content a { margin: 0; font-size: 16px; color: #0f172a; font-weight: 500; text-decoration: none; }
+.BatchMate-about-content a:hover { color: #2561a8; text-decoration: underline; }
+
+
+
+
+/* ═══════════════════════════════════════════════════
+   BatchMate SETTINGS PAGE — Modern UI
+═══════════════════════════════════════════════════ */
+.BatchMate-settings-wrap { max-width: 1100px; }
+
+/* ── Page Header ── */
+.BatchMate-settings-header {
+    background: linear-gradient(135deg, #1a3a6b 0%, #2561a8 100%);
+    border-radius: 14px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(26,58,107,.25);
+}
+.BatchMate-settings-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.BatchMate-settings-title {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.BatchMate-settings-icon { font-size: 32px; line-height: 1; }
+.BatchMate-settings-title h1 {
+    margin: 0 0 4px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+}
+.BatchMate-settings-title p {
+    margin: 0;
+    font-size: 13px;
+    color: rgba(255,255,255,.75);
+}
+.BatchMate-save-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: #fff;
+    color: #1a3a6b;
+    border: none;
+    border-radius: 30px;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    font-family: inherit;
+    flex-shrink: 0;
+}
+.BatchMate-save-btn:hover {
+    background: #f0f7ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0,0,0,.2);
+}
+.BatchMate-save-btn .dashicons { font-size: 17px; width: 17px; height: 17px; color: #2561a8; }
+
+/* ── Tab Navigation ── */
+.BatchMate-tab-nav {
+    display: flex;
+    gap: 6px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 6px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+.BatchMate-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 22px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all .18s;
+    font-family: inherit;
+    white-space: nowrap;
+}
+.BatchMate-tab-btn .dashicons { font-size: 16px; width: 16px; height: 16px; }
+.BatchMate-tab-btn:hover { background: #f1f5f9; color: #1a2e4a; }
+.BatchMate-tab-btn.BatchMate-tab-active {
+    background: linear-gradient(135deg, #1a3a6b, #2561a8);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(37,97,168,.35);
+    font-weight: 700;
+}
+.BatchMate-tab-btn.BatchMate-tab-active .dashicons { color: #fff; }
+
+/* ── Tab Panes ── */
+.BatchMate-tab-pane { display: none; }
+.BatchMate-tab-pane-active { display: block; }
+
+/* ── Settings Cards ── */
+.BatchMate-settings-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin-bottom: 18px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.05);
+    overflow: hidden;
+}
+.BatchMate-card-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 22px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+.BatchMate-card-head .dashicons { color: #2561a8; font-size: 18px; width: 18px; height: 18px; }
+.BatchMate-card-head h3 { margin: 0; font-size: 15px; font-weight: 700; color: #1a2e4a; }
+.BatchMate-card-body { padding: 22px; }
+.BatchMate-card-desc { margin: 0 0 18px; font-size: 13px; color: #6b7280; }
+
+/* ── Field Grid ── */
+.BatchMate-field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+.BatchMate-field-full { grid-column: 1 / -1; }
+.BatchMate-field-group { display: flex; flex-direction: column; gap: 6px; }
+.BatchMate-field-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.BatchMate-field-group label .dashicons { font-size: 15px; width: 15px; height: 15px; color: #6b7280; }
+.BatchMate-field-group input[type="text"],
+.BatchMate-field-group input[type="email"],
+.BatchMate-field-group input[type="url"],
+.BatchMate-field-group select {
+    width: 100%;
+    height: 42px;
+    padding: 0 13px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1d2327;
+    background: #fafafa;
+    transition: border-color .2s, box-shadow .2s;
+    box-sizing: border-box;
+    font-family: inherit;
+    line-height: 40px;
+}
+.BatchMate-field-group textarea {
+    width: 100%;
+    padding: 9px 13px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1d2327;
+    background: #fafafa;
+    transition: border-color .2s, box-shadow .2s;
+    box-sizing: border-box;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+}
+.BatchMate-field-group input:focus,
+.BatchMate-field-group select:focus,
+.BatchMate-field-group textarea:focus {
+    border-color: #2561a8;
+    outline: none;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(37,97,168,.12);
+}
+
+.BatchMate-field-hint { font-size: 12px; color: #9ca3af; margin: 4px 0 0; }
+
+/* ── Media Grid (Logo + Banner side by side) ── */
+.BatchMate-media-grid {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+.BatchMate-media-card .BatchMate-card-body { padding: 18px; }
+
+/* Logo Preview */
+.BatchMate-logo-preview-wrap {
+    height: 130px;
+    border: 2px dashed #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin-bottom: 12px;
+    transition: border-color .2s;
+}
+.BatchMate-logo-preview-wrap:hover { border-color: #2561a8; }
+.BatchMate-logo-preview-img {
+    max-width: 100%;
+    max-height: 120px;
+    object-fit: contain;
+    display: block;
+}
+.BatchMate-media-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: #9ca3af;
+}
+.BatchMate-media-placeholder .dashicons { font-size: 32px; width: 32px; height: 32px; }
+.BatchMate-media-placeholder p { margin: 0; font-size: 12px; }
+
+/* Banner Preview */
+.BatchMate-banner-card .BatchMate-card-head { position: relative; }
+.BatchMate-badge {
+    margin-left: auto;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+.BatchMate-badge-custom { background: #dcfce7; color: #166534; }
+.BatchMate-badge-default { background: #fef9c3; color: #854d0e; }
+.BatchMate-banner-preview-wrap {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    border: 1.5px solid #e2e8f0;
+    background: #f1f5f9;
+    height: 130px;
+}
+.BatchMate-banner-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.BatchMate-banner-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,.45);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 10px;
+    text-align: center;
+    letter-spacing: .3px;
+}
+
+/* ── Media Action Buttons ── */
+.BatchMate-media-actions { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.BatchMate-media-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    background: #2561a8;
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s;
+    font-family: inherit;
+}
+.BatchMate-media-upload-btn:hover { background: #1a3a6b; }
+.BatchMate-media-upload-btn .dashicons { font-size: 14px; width: 14px; height: 14px; }
+.BatchMate-media-remove-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    background: #fff;
+    color: #ef4444;
+    border: 1.5px solid #fca5a5;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    font-family: inherit;
+}
+.BatchMate-media-remove-btn:hover { background: #fef2f2; border-color: #ef4444; }
+.BatchMate-media-remove-btn .dashicons { font-size: 14px; width: 14px; height: 14px; }
+
+/* ── Toggle Switch ── */
+.BatchMate-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 4px 0;
+}
+.BatchMate-toggle-info strong {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: #1a2e4a;
+    margin-bottom: 3px;
+}
+.BatchMate-toggle-info strong .dashicons { font-size: 16px; width: 16px; height: 16px; color: #2561a8; }
+.BatchMate-toggle-info p { margin: 0; font-size: 12px; color: #6b7280; }
+.BatchMate-toggle-switch { position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0; }
+.BatchMate-toggle-switch input { opacity: 0; width: 0; height: 0; }
+.BatchMate-toggle-slider {
+    position: absolute; inset: 0;
+    background: #d1d5db;
+    border-radius: 26px;
+    cursor: pointer;
+    transition: background .2s;
+}
+.BatchMate-toggle-slider::before {
+    content: '';
+    position: absolute;
+    left: 3px; top: 3px;
+    width: 20px; height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform .2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.BatchMate-toggle-switch input:checked + .BatchMate-toggle-slider { background: #2561a8; }
+.BatchMate-toggle-switch input:checked + .BatchMate-toggle-slider::before { transform: translateX(22px); }
+
+/* ── Divider ── */
+.BatchMate-divider { border: none; border-top: 1px solid #f1f5f9; margin: 20px 0; }
+
+/* ── Birthday Template Grid ── */
+.BatchMate-birthday-template-grid {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 24px;
+    align-items: start;
+}
+.BatchMate-card-preview-img {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    display: block;
+    box-shadow: 0 2px 10px rgba(0,0,0,.08);
+}
+
+/* ── Credentials Box ── */
+.BatchMate-credentials-box {
+    margin-top: 18px;
+    border-radius: 10px;
+    padding: 18px 20px;
+}
+.BatchMate-credentials-box h4 {
+    margin: 0 0 14px;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.BatchMate-credentials-box h4 .dashicons { font-size: 17px; width: 17px; height: 17px; }
+.BatchMate-credentials-fb  { background: #eff6ff; border-left: 4px solid #4267B2; }
+.BatchMate-credentials-make { background: #f5f3ff; border-left: 4px solid #6f42c1; }
+.BatchMate-credentials-fb h4  { color: #4267B2; }
+.BatchMate-credentials-make h4 { color: #6f42c1; }
+
+/* ── Test Button ── */
+.BatchMate-test-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #fff;
+    border: 1.5px solid #2561a8;
+    color: #2561a8;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    font-family: inherit;
+}
+.BatchMate-test-btn:hover { background: #2561a8; color: #fff; }
+.BatchMate-test-btn .dashicons { font-size: 15px; width: 15px; height: 15px; }
+.BatchMate-test-result { font-size: 13px; font-weight: 600; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .BatchMate-media-grid { grid-template-columns: 1fr; }
+    .BatchMate-field-grid { grid-template-columns: 1fr; }
+    .BatchMate-field-full { grid-column: 1; }
+    .BatchMate-birthday-template-grid { grid-template-columns: 1fr; }
+    .BatchMate-tab-nav { flex-wrap: wrap; }
+    .BatchMate-tab-btn { padding: 8px 14px; font-size: 13px; }
+    .BatchMate-settings-header-inner { flex-direction: column; align-items: flex-start; }
+}
+
+/* ── Webhook & SMS Automation Enhancements ── */
+.BatchMate-toggle-sm { width: 38px; height: 22px; }
+.BatchMate-toggle-sm .BatchMate-toggle-slider:before { width: 16px; height: 16px; left: 3px; bottom: 3px; }
+.BatchMate-toggle-sm input:checked + .BatchMate-toggle-slider:before { transform: translateX(16px); }
+
+.batchmate-webhook-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
+.batchmate-webhook-table th, .batchmate-webhook-table td { padding: 10px 12px; border: 1px solid #e2e8f0; text-align: left; vertical-align: middle; }
+.batchmate-webhook-table th { background: #f8fafc; font-size: 12px; font-weight: 600; color: #475569; }
+
+.batchmate-char-counter { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; margin-top: 5px; font-weight: 500; }
+.batchmate-char-counter .count-info { font-weight: 600; color: #1e293b; }
+.batchmate-char-counter.warning .count-info { color: #d97706; }
+.batchmate-char-counter.danger .count-info { color: #dc2626; }
+
+.batchmate-tag-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+.batchmate-tag-chip { display: inline-block; padding: 3px 8px; background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; border-radius: 4px; font-size: 11px; font-family: monospace; cursor: pointer; transition: all .15s; user-select: none; }
+.batchmate-tag-chip:hover { background: #4338ca; color: #fff; transform: translateY(-1px); }
+
+/* Spin animation for saving */
+@keyframes BatchMate-spin { to { transform: rotate(360deg); } }
+.BatchMate-spin { display: inline-block; animation: BatchMate-spin .7s linear infinite; }

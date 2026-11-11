@@ -1,0 +1,480 @@
+/* Animations & Global Overrides */
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+.swal2-container { z-index: 100000 !important; }
+
+/* -- Page Layout -- */
+.BatchMate-events-admin { padding-bottom: 40px; }
+
+/* -- Page Header — old styles overridden by .BatchMate-page-header-animated -- */
+.BatchMate-ev-page-header {
+    /* Inherits from .BatchMate-page-header-animated */
+}
+.BatchMate-ev-page-header h1 { /* Inherited */ }
+.BatchMate-ev-page-header h1 .dashicons { /* Inherited */ }
+.BatchMate-ev-page-header p { /* Inherited */ }
+
+/* -- Stat Cards -- */
+.BatchMate-ev-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+.BatchMate-ev-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 22px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 6px rgba(0,0,0,.07);
+    border-left: 5px solid #2271b1;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+}
+.BatchMate-ev-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,.1); }
+.BatchMate-ev-card--clickable { cursor: pointer; }
+.BatchMate-ev-card--clickable:hover { transform: translateY(-4px); box-shadow: 0 8px 22px rgba(0,0,0,.13); }
+.BatchMate-ev-card--blue   { border-color: #2271b1; }
+.BatchMate-ev-card--green  { border-color: #0a7242; }
+.BatchMate-ev-card--orange { border-color: #d63638; }
+.BatchMate-ev-card--purple { border-color: #826eb4; }
+
+.BatchMate-ev-card-number {
+    font-size: 2.2em;
+    font-weight: 700;
+    color: #1d2327;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+.BatchMate-ev-card-label {
+    font-size: 13px;
+    color: #646970;
+    font-weight: 500;
+}
+.BatchMate-ev-card-icon {
+    font-size: 3.5em;
+    color: rgba(0,0,0,.05);
+}
+.BatchMate-ev-card-icon .dashicons {
+    width: 1em; height: 1em; font-size: 1em;
+}
+.BatchMate-ev-card--blue   .BatchMate-ev-card-icon { color: rgba(34,113,177,.1); }
+.BatchMate-ev-card--green  .BatchMate-ev-card-icon { color: rgba(10,114,66,.1); }
+.BatchMate-ev-card--orange .BatchMate-ev-card-icon { color: rgba(214,54,56,.1); }
+.BatchMate-ev-card--purple .BatchMate-ev-card-icon { color: rgba(130,110,180,.1); }
+
+/* -- Tab Bar -- */
+.BatchMate-ev-tab-bar {
+    background: #fff;
+    border-radius: 12px 12px 0 0;
+    padding: 0 20px;
+    border: 1px solid #e2e4e7;
+    border-bottom: none;
+}
+.BatchMate-ev-tabs {
+    display: flex;
+    gap: 4px;
+}
+.BatchMate-ev-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #646970;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    white-space: nowrap;
+    margin-bottom: -1px;
+}
+.BatchMate-ev-tab:hover { color: #2271b1; background: #f6f7f7; border-radius: 8px 8px 0 0; }
+.BatchMate-ev-tab.active { color: #2271b1; border-bottom-color: #2271b1; background: none; }
+.BatchMate-ev-tab .dashicons { font-size: 17px; width: 17px; height: 17px; }
+
+/* Tab Badge */
+.tab-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+    line-height: 1.5;
+}
+.BatchMate-ev-badge--blue   { background: rgba(34,113,177,.12); color: #2271b1; }
+.BatchMate-ev-badge--green  { background: rgba(10,114,66,.12);  color: #0a7242; }
+.BatchMate-ev-badge--orange { background: rgba(214,54,56,.12);  color: #d63638; }
+
+/* -- Tab Content -- */
+.BatchMate-ev-tab-content {
+    display: none;
+    background: #fff;
+    border: 1px solid #e2e4e7;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 20px;
+}
+.BatchMate-ev-tab-content.active { display: block; }
+
+/* -- Toolbar -- */
+.BatchMate-ev-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f0f1;
+    flex-wrap: wrap;
+}
+.BatchMate-ev-toolbar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.BatchMate-ev-toolbar-right { display: flex; align-items: center; gap: 8px; }
+.BatchMate-ev-toolbar-label { font-size: 13px; font-weight: 600; color: #1d2327; }
+
+/* Collection summary badge */
+.BatchMate-ev-collection-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #f0fff4; border: 1.5px solid #9ae6b4;
+    border-radius: 20px; padding: 4px 14px;
+    font-size: 13px; color: #0a7242; font-weight: 600;
+}
+.BatchMate-ev-collection-badge .dashicons { font-size: 15px; width: 15px; height: 15px; color: #0a7242; }
+.BatchMate-ev-collection-badge strong { color: #0a7242; }
+
+.BatchMate-ev-select {
+    height: 36px;
+    padding: 0 10px;
+    border: 1.5px solid #c3c4c7;
+    border-radius: 6px;
+    font-size: 13px;
+    min-width: 200px;
+    color: #1d2327;
+    background: #fff;
+}
+.BatchMate-ev-select:focus { border-color: #2271b1; outline: none; }
+
+/* -- Buttons -- */
+.BatchMate-ev-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all .2s;
+    text-decoration: none;
+}
+.BatchMate-ev-btn .dashicons { font-size: 16px; width: 16px; height: 16px; }
+.BatchMate-ev-btn--primary  { background: #2271b1; color: #fff; }
+.BatchMate-ev-btn--primary:hover  { background: #135e96; color: #fff; }
+.BatchMate-ev-btn--outline  { background: transparent; color: #2271b1; border: 1.5px solid #2271b1; }
+.BatchMate-ev-btn--outline:hover  { background: #f0f6fc; }
+.BatchMate-ev-btn--ghost    { background: transparent; color: #646970; border: 1.5px solid #c3c4c7; }
+.BatchMate-ev-btn--ghost:hover    { background: #f6f7f7; }
+
+/* -- Table Wrap -- */
+.BatchMate-ev-table-wrap { overflow-x: auto; }
+/* Prevent unnecessary horizontal scroll on wide screens */
+@media (min-width: 1200px) {
+    .BatchMate-ev-table-wrap { overflow-x: visible; }
+    #event-applications-table td, #event-applications-table th { word-break: break-word; }
+    #event-registered-table td,   #event-registered-table th   { word-break: break-word; }
+}
+
+/* -- Status badges -- */
+.BatchMate-status-pending  { background:#fff3cd; color:#856404;  padding:3px 10px; border-radius:12px; font-size:12px; font-weight:600; white-space:nowrap; display:inline-block; }
+.BatchMate-status-approved { background:#d1e7dd; color:#0a3622;  padding:3px 10px; border-radius:12px; font-size:12px; font-weight:600; white-space:nowrap; display:inline-block; }
+.BatchMate-status-rejected { background:#f8d7da; color:#58151c;  padding:3px 10px; border-radius:12px; font-size:12px; font-weight:600; white-space:nowrap; display:inline-block; }
+.BatchMate-status-active   { background:#cff4fc; color:#055160;  padding:3px 10px; border-radius:12px; font-size:12px; font-weight:600; white-space:nowrap; display:inline-block; }
+.BatchMate-status-inactive { background:#e2e3e5; color:#41464b;  padding:3px 10px; border-radius:12px; font-size:12px; font-weight:600; white-space:nowrap; display:inline-block; }
+
+/* -- Shortcode chip -- */
+.BatchMate-shortcode-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #f6f7f7; border: 1px solid #c3c4c7;
+    border-radius: 5px; padding: 3px 8px;
+    font-family: 'Courier New', monospace; font-size: 11.5px;
+    cursor: pointer; transition: .15s; color: #1d2327;
+}
+.BatchMate-shortcode-chip:hover { background: #2271b1; color: #fff; border-color: #2271b1; }
+.BatchMate-shortcode-chip .dashicons { font-size: 13px; width: 13px; height: 13px; }
+
+/* -- Photo thumb -- */
+#event-registered-table img.evt-photo,
+#event-applications-table img.evt-photo {
+    width: 36px; height: 36px; object-fit: cover;
+    border-radius: 50%; border: 2px solid #e2e4e7;
+    display: block; margin: 0 auto;
+}
+
+/* -- Column widths -- */
+/* Registered table: # (1st) */
+#event-registered-table th:nth-child(1),
+#event-registered-table td:nth-child(1) {
+    width: 38px; min-width: 38px; text-align: center;
+}
+/* Registered table: Member ID (2nd) - wide, no wrap */
+#event-registered-table th:nth-child(2),
+#event-registered-table td:nth-child(2) {
+    width: 120px; min-width: 115px; white-space: nowrap; font-weight: 600;
+}
+/* Registered table: name (3rd) */
+#event-registered-table th:nth-child(3),
+#event-registered-table td:nth-child(3) {
+    min-width: 150px;
+}
+/* Registered table: Photo (4th) - minimal width */
+#event-registered-table th:nth-child(4),
+#event-registered-table td:nth-child(4) {
+    width: 48px; min-width: 48px; max-width: 56px; text-align: center; padding-left: 4px; padding-right: 4px;
+}
+/* Registered table: District (5th) */
+#event-registered-table th:nth-child(5),
+#event-registered-table td:nth-child(5) {
+    white-space: nowrap; min-width: 80px;
+}
+/* Registered table: Contact (6th) */
+#event-registered-table th:nth-child(6),
+#event-registered-table td:nth-child(6) {
+    white-space: nowrap;
+}
+/* Registered table: Amount (7th) */
+#event-registered-table th:nth-child(7),
+#event-registered-table td:nth-child(7) {
+    white-space: nowrap; text-align: right;
+}
+/* Registered table: Actions (11th) */
+#event-registered-table th:nth-child(11),
+#event-registered-table td:nth-child(11) {
+    width: 95px; min-width: 95px; white-space: nowrap; text-align: center;
+}
+/* Applications table: ID (1st) */
+#event-applications-table th:nth-child(1),
+#event-applications-table td:nth-child(1) {
+    width: 48px; min-width: 48px; white-space: nowrap; text-align: center;
+}
+/* Applications table: Member ID (2nd) */
+#event-applications-table th:nth-child(2),
+#event-applications-table td:nth-child(2) {
+    width: 90px; min-width: 80px; white-space: nowrap;
+}
+/* Applications table: Name (3rd) — wide */
+#event-applications-table th:nth-child(3),
+#event-applications-table td:nth-child(3) {
+    min-width: 200px;
+}
+/* Applications table: Photo (4th) */
+#event-applications-table th:nth-child(4),
+#event-applications-table td:nth-child(4) {
+    width: 52px; min-width: 52px; text-align: center; padding-left: 6px; padding-right: 6px;
+}
+
+/* -- Slide-in Modal -- */
+#BatchMate-event-modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.5); z-index: 99990;
+}
+#BatchMate-event-modal {
+    display: none; position: fixed; top: 0; right: 0;
+    width: 440px; max-width: 100%; height: 100vh;
+    background: #fff; box-shadow: -6px 0 32px rgba(0,0,0,.15);
+    z-index: 99999; flex-direction: column; overflow: hidden;
+    transform: translateX(100%); transition: transform .3s cubic-bezier(.4,0,.2,1);
+}
+#BatchMate-event-modal.open { display: flex; transform: translateX(0); }
+
+.BatchMate-emodal-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    padding: 24px 28px 20px;
+    background: linear-gradient(135deg, #1a3a6b, #2271b1); color: #fff;
+}
+.BatchMate-emodal-header h2 { margin: 0; font-size: 20px; color: #fff; }
+.BatchMate-emodal-close {
+    background: rgba(255,255,255,.15); border: none; color: #fff;
+    font-size: 20px; cursor: pointer; line-height: 1;
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: .2s; flex-shrink: 0;
+}
+.BatchMate-emodal-close:hover { background: rgba(255,255,255,.3); }
+
+.BatchMate-emodal-body { flex: 1; overflow-y: auto; padding: 28px; }
+.BatchMate-emodal-footer {
+    padding: 16px 28px; border-top: 1px solid #f0f0f1;
+    display: flex; justify-content: flex-end; gap: 10px;
+    background: #f9f9f9;
+}
+
+/* Modal Form */
+.BatchMate-efield-group { margin-bottom: 22px; }
+.BatchMate-efield-group label { display: block; font-weight: 600; margin-bottom: 7px; font-size: 13px; color: #1d2327; }
+.BatchMate-efield-group input[type="text"],
+.BatchMate-efield-group input[type="date"] {
+    width: 100%; padding: 10px 14px;
+    border: 1.5px solid #c3c4c7; border-radius: 7px;
+    font-size: 14px; box-sizing: border-box;
+    transition: border .2s, box-shadow .2s;
+}
+.BatchMate-efield-group input:focus { border-color: #2271b1; outline: none; box-shadow: 0 0 0 3px rgba(34,113,177,.15); }
+.required { color: #d63638; }
+
+/* Toggle switch */
+.BatchMate-toggle-group .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.BatchMate-toggle-switch { position: relative; display: inline-block; width: 52px; height: 28px; flex-shrink: 0; }
+.BatchMate-toggle-switch input { opacity: 0; width: 0; height: 0; }
+.BatchMate-toggle-slider { position: absolute; cursor: pointer; inset: 0; background: #c3c4c7; border-radius: 28px; transition: .3s; }
+.BatchMate-toggle-slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .3s; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+.BatchMate-toggle-switch input:checked + .BatchMate-toggle-slider { background: #2271b1; }
+.BatchMate-toggle-switch input:checked + .BatchMate-toggle-slider:before { transform: translateX(24px); }
+
+/* -- Event Option Rows -- */
+.event-option-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+.event-option-row input { flex:1; padding:8px 10px; border:1.5px solid #c3c4c7; border-radius:6px; font-size:13px; }
+.event-option-row input.fee-input { max-width:90px; }
+.event-option-row input.maxqty-input { max-width:70px; }
+.event-option-row .lbl { font-size:11px; color:#888; white-space:nowrap; }
+.event-option-row .remove-opt { background:none;border:none;color:#d63638;font-size:18px;cursor:pointer;line-height:1;padding:0 4px; }
+.event-option-row input:focus { border-color:#2271b1;outline:none; }
+
+/* -- Edit App Modal -- */
+#BatchMate-editapp-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99990; }
+#BatchMate-editapp-modal {
+    display:none;position:fixed;top:0;right:0;
+    width:480px;max-width:100%;height:100vh;
+    background:#fff;box-shadow:-6px 0 32px rgba(0,0,0,.15);
+    z-index:99999;flex-direction:column;overflow:hidden;
+    transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+}
+#BatchMate-editapp-modal.open { display:flex;transform:translateX(0); }
+
+/* -- Transaction Modal -- */
+#BatchMate-transaction-modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99990; }
+#BatchMate-transaction-modal {
+    display:none;position:fixed;top:0;right:0;
+    width:440px;max-width:100%;height:100vh;
+    background:#fff;box-shadow:-6px 0 32px rgba(0,0,0,.15);
+    z-index:99999;flex-direction:column;overflow:hidden;
+    transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+}
+#BatchMate-transaction-modal.open { display:flex;transform:translateX(0); }
+#BatchMate-editapp-modal .BatchMate-efield-group select,
+#BatchMate-editapp-modal .BatchMate-efield-group input { width:100%;padding:10px 14px;border:1.5px solid #c3c4c7;border-radius:7px;font-size:14px;box-sizing:border-box; }
+#BatchMate-editapp-modal .BatchMate-efield-group select:focus,
+#BatchMate-editapp-modal .BatchMate-efield-group input:focus { border-color:#2271b1;outline:none;box-shadow:0 0 0 3px rgba(34,113,177,.15); }
+.editapp-opts-table { width:100%;border-collapse:collapse;font-size:13px;margin-top:4px; }
+.editapp-opts-table th,.editapp-opts-table td { border:1px solid #dee2e6;padding:6px 10px; }
+.editapp-opts-table thead { background:#f0f6fc;font-weight:600; }
+.editapp-opts-table input[type="number"] { width:70px;padding:4px 6px;border:1.5px solid #c3c4c7;border-radius:5px;text-align:center; }
+
+/* -- Department Summary Block -- */
+.BatchMate-dept-summary-wrap {
+    border-top: 2px dashed #e2e4e7;
+    padding-top: 22px;
+}
+.BatchMate-dept-summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.BatchMate-dept-summary-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1d2327;
+}
+.BatchMate-dept-summary-title .dashicons {
+    color: #2271b1;
+    font-size: 20px; width: 20px; height: 20px;
+}
+/* Progress bar inside dept table */
+.BatchMate-dept-bar-wrap {
+    background: #f0f4f8;
+    border-radius: 6px;
+    overflow: hidden;
+    height: 14px;
+    min-width: 80px;
+}
+.BatchMate-dept-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2271b1, #0a7242);
+    border-radius: 6px;
+    transition: width 0.5s ease;
+}
+
+/* -- Responsive -- */
+@media screen and (max-width: 1024px) {
+    .BatchMate-ev-cards { grid-template-columns: repeat(2, 1fr); }
+}
+@media screen and (max-width: 782px) {
+    .BatchMate-events-admin { padding-bottom: 20px; }
+    .BatchMate-ev-page-header { flex-direction: column; align-items: flex-start; gap: 6px; padding: 14px 0 8px; }
+    .BatchMate-ev-page-header h1 { font-size: 20px; }
+    .BatchMate-ev-cards { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+    .BatchMate-ev-card { padding: 16px 14px; border-radius: 10px; }
+    .BatchMate-ev-card-number { font-size: 1.6em; }
+    .BatchMate-ev-card-icon { font-size: 2.5em; }
+    .BatchMate-ev-tab-bar { padding: 0 10px; border-radius: 10px 10px 0 0; }
+    .BatchMate-ev-tabs { flex-wrap: wrap; gap: 0; }
+    .BatchMate-ev-tab { padding: 10px 14px; font-size: 13px; gap: 5px; flex: 1 1 auto; justify-content: center; }
+    .BatchMate-ev-tab .tab-label { display: inline; }
+    .BatchMate-ev-tab-content { padding: 14px 10px; border-radius: 0 0 10px 10px; }
+    .BatchMate-ev-toolbar { flex-direction: column; align-items: stretch; gap: 10px; }
+    .BatchMate-ev-toolbar-left { flex-direction: column; align-items: stretch; }
+    .BatchMate-ev-toolbar-right { justify-content: flex-start; flex-wrap: wrap; }
+    .BatchMate-ev-select { min-width: 100%; }
+    .BatchMate-ev-collection-badge { font-size: 11px; padding: 4px 10px; flex-wrap: wrap; }
+    .BatchMate-ev-table-wrap { margin: 0 -10px; }
+    #event-registered-table, #event-applications-table, #event-list-table { font-size: 12px; }
+}
+@media screen and (max-width: 480px) {
+    .BatchMate-ev-cards { grid-template-columns: 1fr; gap: 8px; }
+    .BatchMate-ev-card { padding: 14px 12px; }
+    .BatchMate-ev-card-number { font-size: 1.4em; }
+    .BatchMate-ev-card-icon { font-size: 2em; }
+    .BatchMate-ev-tab { padding: 8px 10px; font-size: 12px; }
+    .BatchMate-ev-tab .dashicons { font-size: 14px; width: 14px; height: 14px; }
+    .tab-badge { font-size: 10px; padding: 1px 5px; }
+    .BatchMate-ev-btn { padding: 6px 12px; font-size: 12px; }
+    /* Modal responsive */
+    #BatchMate-transaction-modal { width: 100%; }
+}
+
+/* Print Styles for Financial Report */
+.BatchMate-print-only { display: none; }
+@media print {
+    body * { visibility: hidden; }
+    #tab-expenses, #tab-expenses * { visibility: visible; }
+    #tab-expenses { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; background: #fff; }
+    .BatchMate-no-print { display: none !important; }
+    .BatchMate-print-only { display: block; }
+    
+    .BatchMate-print-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1d4ed8; padding-bottom: 10px; }
+    .BatchMate-print-header h2 { font-size: 24px; color: #0f2756; margin: 0; }
+    .BatchMate-print-header h3 { font-size: 18px; color: #64748b; margin: 5px 0 0; }
+    
+    #expenses-report-cards { display: grid !important; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; page-break-inside: avoid; }
+    .BatchMate-ev-card { border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: none !important; padding: 15px; text-align: center; }
+    .BatchMate-ev-card-number { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+    .BatchMate-ev-card-label { font-size: 12px; color: #64748b; }
+    
+    table.dataTable { border-collapse: collapse !important; width: 100% !important; margin-bottom: 40px; }
+    table.dataTable th, table.dataTable td { border: 1px solid #cbd5e1 !important; padding: 8px !important; font-size: 12px; }
+    table.dataTable thead th { background: #f8fafc !important; color: #0f2756 !important; -webkit-print-color-adjust: exact; }
+    
+    .BatchMate-print-signatures { display: flex; justify-content: space-between; margin-top: 60px; page-break-inside: avoid; }
+    .sig-box { text-align: center; width: 25%; }
+    .sig-line { border-bottom: 1px solid #000; margin-bottom: 8px; height: 40px; }
+    .sig-box p { font-size: 12px; font-weight: bold; margin: 0; }
+}

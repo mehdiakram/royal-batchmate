@@ -1,0 +1,85 @@
+# Bengali translation for Royal BatchMate
+msgid ""
+msgstr ""
+"Project-Id-Version: Royal BatchMate\n"
+"Language: bn_BD\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Birthday Card Template"
+msgstr "বার্থডে কার্ড টেমপ্লেট"
+
+msgid "Select Card Design"
+msgstr "কার্ডের ডিজাইন নির্বাচন করুন"
+
+msgid "Birthday Card 1 (Midnight Royal & Gold)"
+msgstr "বার্থডে কার্ড ১ (মিডনাইট রয়্যাল এবং গোল্ড)"
+
+msgid "Birthday Card 2 (Crimson & Rose Gold)"
+msgstr "বার্থডে কার্ড ২ (ক্রিমসন এবং রোজ গোল্ড)"
+
+msgid "Birthday Card 3 (Emerald & Gold)"
+msgstr "বার্থডে কার্ড ৩ (এমেরাল্ড এবং গোল্ড)"
+
+msgid "Live Canvas Preview:"
+msgstr "লাইভ ক্যানভাস প্রিভিউ:"
+
+msgid "Re-generate Preview"
+msgstr "প্রিভিউ পুনরায় তৈরি করুন"
+
+msgid "Pure GD canvas template rendered dynamically in 1080x1080 square format."
+msgstr "১০৮০x১০৮০ স্কয়ার ফরম্যাটে বিশুদ্ধ GD ক্যানভাসে স্বয়ংক্রিয়ভাবে কার্ড তৈরি হয়।"
+
+msgid "Card Subtitle / Badge Display"
+msgstr "কার্ড সাবটাইটেল / ব্যাজ প্রদর্শন (নামের নিচে প্রদর্শন)"
+
+msgid "Choose what text appears below the member name on the card. Select <strong>None / Hidden</strong> to omit any subtitle."
+msgstr "কার্ডে নামের নিচে কি লেখা থাকবে তা নির্বাচন করুন। কোনো কিছু না চাইলে <strong>None / Hidden</strong> রাখুন (মেম্বর লেখা বন্ধ থাকবে)।"
+
+msgid "None / Hidden"
+msgstr "None / Hidden (কোনো কিছু থাকবে না — মেম্বর লেখা বন্ধ)"
+
+msgid "Batch (e.g. Batch 1999)"
+msgstr "Batch (ব্যাচ — e.g. Batch 1999)"
+
+msgid "Department / Group (e.g. Science)"
+msgstr "Department / Group (শাখা / ডিপার্টমেন্ট — e.g. Science)"
+
+msgid "Profession / Designation"
+msgstr "Profession / Designation (পেশা / পদবী)"
+
+msgid "Blood Group (e.g. Blood: B+)"
+msgstr "Blood Group (রক্তের গ্রুপ — e.g. Blood: B+)"
+
+msgid "Program"
+msgstr "Program (প্রোগ্রাম)"
+
+msgid "Custom Text"
+msgstr "Custom Text (নির্ধারিত কাস্টম টেক্সট)"
+
+msgid "Custom badge text (e.g. SSC 99 Batchmate)"
+msgstr "কাস্টম ব্যাজ টেক্সট (যেমন: SSC 99 Batchmate)"
+
+msgid "Leave empty to omit subtitle. You can also configure this automatically in Settings #automation."
+msgstr "খালি রাখলে কোনো ব্যাজ/মেম্বর লেখা আসবে না। সেটিংস থেকে এটি স্বয়ংক্রিয়ভাবে ম্যাপ করা যায়।"
+
+msgid "Generating Canvas Preview..."
+msgstr "ক্যানভাস প্রিভিউ তৈরি হচ্ছে..."
+
+msgid "Rendering..."
+msgstr "রেন্ডার হচ্ছে..."
+
+msgid "Card Preview"
+msgstr "কার্ড প্রিভিউ"
+
+msgid "Settings saved successfully."
+msgstr "সেটিংস সফলভাবে সংরক্ষিত হয়েছে।"
+
+msgid "Failed to generate 1080x1080 card image."
+msgstr "১০৮০x১০৮০ কার্ডের ছবি তৈরিতে ব্যর্থ হয়েছে।"
+
+msgid "1080x1080 card generated successfully!"
+msgstr "১০৮০x১০৮০ কার্ড সফলভাবে তৈরি হয়েছে!"
+

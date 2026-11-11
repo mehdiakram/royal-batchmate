@@ -1,0 +1,339 @@
+/*
+Theme Name:   Royal BatchMate
+Description:  SSC Batch Community — Facebook Page, Reunion, Directory, Events & Memories
+Template:     royal-elementor
+*/
+
+.breadcrumb {
+  color: var(--breadcrumb_text_color);
+  background-color: var(--breadcrumb_bg_color);
+  padding: 50px 0px;
+  position: relative;
+}
+
+.breadcrumb::after {
+  content: " ";
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-top: 20px solid var(--breadcrumb_bg_color);
+  left: 50%;
+  margin-left: -10px;
+  bottom: -20px;
+}
+
+.breadcrumb .pagetitle {
+  text-align: center;
+  font-size: 32px;
+}
+
+.pagesection {
+  padding: 50px 0px;
+}
+
+.memberpage .pagetitle {
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+  margin: 10px auto;
+  padding: 10px 0;
+  width: 500px;
+}
+
+.memberpage .memberpost {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.memberpage .memberphoto {
+  text-align: center;
+}
+
+.memberpage .memberphoto img {
+  max-width: 200px;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  padding: 5px;
+}
+
+.memberinfo {
+  width: 500px;
+  max-width: 100%;
+  margin: 0 auto;
+  text-align: left;
+  border-collapse: collapse;
+}
+
+.memberinfo td,
+.memberinfo th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.memberinfo td:first-child {
+    width: 115px;
+}
+
+.memberinfo tr:nth-child(odd) {
+  background-color: #f2f2f2;
+}
+
+.memberinfo tr:hover {
+  background-color: #ddd;
+}
+
+.memberinfo th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #04aa6d;
+  color: white;
+}
+
+
+#memberstable img{
+  max-width: 80px;
+  height: auto;
+}
+
+
+.membersocial {
+  margin: 0 auto;
+  width: 200px;
+  margin-top: 10px;
+  text-align: center;
+
+}
+
+.membersocial i {
+    font-size: 32px;
+    border: 1px solid;
+}
+
+
+
+/* === Executive Committee Photo Grid Styles === */
+
+.BatchMate-ec-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.BatchMate-ec-wrapper h2 {
+    text-align: center;
+    font-size: 2.5em;
+    color: #333;
+    margin-bottom: 40px;
+    padding-bottom: 15px;
+    position: relative;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.BatchMate-ec-wrapper h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background-color: #007cba; /* আপনার থিমের কালার অনুযায়ী পরিবর্তন করতে পারেন */
+    border-radius: 2px;
+}
+
+/* Grid Container */
+.BatchMate-ec-photo-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 40px; /* সারিগুলোর মাঝখানের গ্যাপ */
+}
+
+/* Individual Rows (For hierarchical grouping) */
+.BatchMate-ec-photo-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px; /* কার্ডগুলোর মাঝখানের গ্যাপ */
+}
+
+/* Member Card Design */
+.BatchMate-ec-member-card {
+    background: #ffffff;
+    width: 260px;
+    padding: 30px 20px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    border: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.BatchMate-ec-member-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border-color: #e0e0e0;
+}
+
+/* Top Colored Border Effect (Optional) */
+.BatchMate-ec-member-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, #007cba, #00a8e8);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.BatchMate-ec-member-card:hover::before {
+    opacity: 1;
+}
+
+/* Image Styling */
+.BatchMate-ec-member-card img {
+    width: 180px;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    box-shadow: 0 0 0 3px #f0f0f0; 
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.BatchMate-ec-member-card:hover img {
+    box-shadow: 0 0 0 3px #007cba; /* হোভার করলে কালার চেঞ্জ হবে */
+    transform: scale(1.05);
+}
+
+/* Name & Position Styling */
+.BatchMate-ec-member-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #222;
+    margin: 10px 0 5px;
+    line-height: 1.4;
+}
+
+.BatchMate-ec-position {
+    font-size: 14px;
+    font-weight: 600;
+    color: #007cba;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+/* === Responsive Design === */
+
+@media (max-width: 991px) {
+    .BatchMate-ec-member-card {
+        width: 45%; /* ট্যাবলেটে পাশাপাশি ২টি */
+        max-width: 300px;
+    }
+}
+
+@media (max-width: 767px) {
+	.memberpage .pagetitle{
+		width: inherit;
+	}
+    .BatchMate-ec-wrapper h2 {
+        font-size: 2em;
+    }
+
+    .BatchMate-ec-photo-row {
+        gap: 20px;
+    }
+
+    .BatchMate-ec-member-card {
+        width: 100%; /* মোবাইলে পুরো জায়গা নিবে */
+        max-width: 320px; /* তবে খুব বেশি বড় হবে না */
+        margin: 0 auto;
+    }
+}
+
+
+
+
+
+.registration-form { max-width: 900px; margin: 0 auto; }
+.form-section { margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+.form-section h3 { border-bottom: 2px solid #0056b3; padding-bottom: 5px; margin-bottom: 20px; color: #0056b3; }
+.form-row { display: flex; flex-wrap: wrap; margin-bottom: 15px; }
+.form-group { flex: 1 1 48%; min-width: 300px; padding: 0 10px; }
+.form-group.full-width { flex-basis: 100%; }
+.form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="file"],
+.form-group input[type="date"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.form-group textarea { min-height: 100px; }
+/* Placeholder styling: soft, muted gray so it is clearly distinguishable from entered text */
+.registration-form ::placeholder,
+.registration-form input::placeholder,
+.registration-form textarea::placeholder,
+.BatchMate-ef-wrap ::placeholder,
+.BatchMate-ef-wrap input::placeholder,
+.BatchMate-ef-wrap textarea::placeholder,
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: #94a3b8 !important;
+    opacity: 0.85 !important;
+    font-weight: 400 !important;
+}
+.registration-form :-ms-input-placeholder,
+.BatchMate-ef-wrap :-ms-input-placeholder,
+.form-group :-ms-input-placeholder {
+    color: #94a3b8 !important;
+}
+.registration-form ::-ms-input-placeholder,
+.BatchMate-ef-wrap ::-ms-input-placeholder,
+.form-group ::-ms-input-placeholder {
+    color: #94a3b8 !important;
+}
+.select2-container .select2-selection--single { height: 40px!important; padding: 5px 0; }
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 40px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    right: 10px !important;
+}
+.submit-btn {
+    background-color: #0056b3; color: white; padding: 12px 30px;
+    border: none; border-radius: 5px; font-size: 18px;
+    cursor: pointer; transition: background-color 0.3s;
+}
+.submit-btn:hover { background-color: #003d82; }
+#photo-preview {
+    max-width: 200px;
+    height: 200px;
+    object-fit: cover;
+    display: none;
+    margin-top: 10px;
+    border: 1px solid #ddd;
+    padding: 5px;
+    border-radius: 5px;
+}
+body.batchmate-modal-open { overflow: hidden !important; }
+
+
+/* Fix SweetAlert z-index behind Elementor header */
+.swal2-container { z-index: 999999 !important; }
