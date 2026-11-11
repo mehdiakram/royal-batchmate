@@ -411,13 +411,18 @@ function batchmate_event_form_shortcode( $atts ) {
     var _evtOptions = []; // event guest options cache
     var _evtMemberFee = 0;
 
-    // Load event options on init
+    // Load event options on init; for Option 3 & 4 also trigger direct form render AFTER options load
     $.ajax({ url: ajaxUrl, type: 'POST',
         data: { action: 'BatchMate_get_event_options', event_id: evtId }
     }).done(function(res){
         if (res.success && res.data && res.data.options) {
-            _evtOptions = res.data.options;
-            _evtMemberFee = parseFloat(res.data.member_fee) || 0;
+            _evtOptions      = res.data.options;
+            _evtMemberFee    = parseFloat(res.data.member_fee) || 0;
+        }
+        // Option 4: Direct Form Only — render AFTER options are loaded so guest options appear
+        if (allowNonMembers === 3) {
+            $searchWrap.hide();
+            renderMemberForm({ member: { is_guest: true }, already: false });
         }
     });
 
@@ -1446,14 +1451,8 @@ function batchmate_event_form_shortcode( $atts ) {
         });
     });
 
-    // Option 4: Direct Form Only -> immediately load the form on page ready!
-    if (allowNonMembers === 3) {
-        $searchWrap.hide();
-        renderMemberForm({
-            member: { is_guest: true },
-            already: false
-        });
-    }
+    // Option 4 render is now handled inside the $.ajax().done() callback above
+    // so that _evtOptions and _evtMemberFee are populated before the form renders.
 
 })(jQuery);
 

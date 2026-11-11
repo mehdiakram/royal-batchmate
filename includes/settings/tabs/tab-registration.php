@@ -150,53 +150,7 @@ $fields_config = [
 $field_settings = $settings['fields'] ?? [];
 ?>
 
-<div class="BatchMate-settings-card" style="margin-top: 20px;">
-    <div class="BatchMate-card-head">
-        <span class="dashicons dashicons-admin-appearance"></span>
-        <h3>Customize Front-End Labels (Institution &amp; Locations)</h3>
-    </div>
-    <div class="BatchMate-card-body">
-        <p style="margin-bottom: 20px; color: #50575e;">
-            Change these primary labels to adapt the registration form, member profiles, and event registration for your organization (e.g. Institution, School, District, Thana/Upazila). Leave blank to use default names.
-        </p>
-        <div class="BatchMate-field-grid">
-            <div class="BatchMate-field-group">
-                <label for="label_institution">"Institution" Label</label>
-                <input type="text" id="label_institution" name="label_institution"
-                       value="<?php echo esc_attr( $label_institution ); ?>"
-                       placeholder="e.g. Institution, School, College, University">
-            </div>
-            <div class="BatchMate-field-group">
-                <label for="label_present_district">"Present District" Label</label>
-                <input type="text" id="label_present_district" name="label_present_district"
-                       value="<?php echo esc_attr( $label_present_district ); ?>"
-                       placeholder="e.g. Present District, বর্তমান জেলা, District">
-            </div>
-            <div class="BatchMate-field-group">
-                <label for="label_present_upazila">"Present Thana / Upazila" Label</label>
-                <input type="text" id="label_present_upazila" name="label_present_upazila"
-                       value="<?php echo esc_attr( $label_present_upazila ); ?>"
-                       placeholder="e.g. Present Thana / Upazila, থানা/উপজেলা, Upazila">
-            </div>
-            <div class="BatchMate-field-group">
-                <label for="label_permanent_district">"Permanent District" Label</label>
-                <input type="text" id="label_permanent_district" name="label_permanent_district"
-                       value="<?php echo esc_attr( $label_permanent_district ); ?>"
-                       placeholder="e.g. Permanent District, স্থায়ী জেলা">
-            </div>
-            <div class="BatchMate-field-group">
-                <label for="label_permanent_upazila">"Permanent Thana / Upazila" Label</label>
-                <input type="text" id="label_permanent_upazila" name="label_permanent_upazila"
-                       value="<?php echo esc_attr( $label_permanent_upazila ); ?>"
-                       placeholder="e.g. Permanent Thana / Upazila, স্থায়ী থানা/উপজেলা">
-            </div>
-            <div class="BatchMate-field-group">
-                <label for="label_roll_no">"Roll No" Label</label>
-                <input type="text" id="label_roll_no" name="label_roll_no"
-                       value="<?php echo esc_attr( $label_roll_no ); ?>"
-                       placeholder="e.g. SSC Roll, Roll No, Student ID">
-            </div>
-        </div>
+
     </div>
 </div>
 

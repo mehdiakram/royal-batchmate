@@ -2,6 +2,12 @@
 
 All notable changes to the **Royal BatchMate** plugin will be documented in this file.
 
+## [26.11.15] - 2026-11-11
+
+### Fixed
+- **Guest Options Missing on Direct Form (Option 4):** Fixed race condition where Family/Guest options (with fees) did not appear because the form rendered before the AJAX options fetch completed. Form now renders inside the `.done()` callback so all options load first.
+- **Duplicate Labels Section Removed:** Removed the redundant "Customize Front-End Labels (Institution & Locations)" card from Registration Settings — superseded by the full "Form Fields & Labels Configuration" table which covers all fields.
+
 ## [26.11.14] - 2026-11-11
 
 ### Fixed
