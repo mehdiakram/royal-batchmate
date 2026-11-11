@@ -112,7 +112,7 @@
 
             <div class="BatchMate-efield-group" style="margin-top:16px;">
                 <label for="modal_event_payment_methods" style="display:block;margin-bottom:4px;font-weight:600;color:#1e293b;">Payment Methods / Accounts <span style="font-size:12px;color:#888;font-weight:400;">(optional — one per line)</span></label>
-                <textarea id="modal_event_payment_methods" rows="3" style="width:100%;border-radius:6px;border:1px solid #ccd0d4;padding:8px 10px;font-size:13px;background:#fff;color:#1e293b;font-family:monospace;" placeholder="01717-164695 (ফিরোজ)&#10;01719-073668 (ববি)&#10;01751-771222 (আউয়াল)"></textarea>
+                <textarea id="modal_event_payment_methods" rows="3" style="width:100%;border-radius:6px;border:1px solid #ccd0d4;padding:8px 10px;font-size:13px;background:#fff;color:#1e293b;font-family:monospace;" placeholder="bKash 01552333272 Royal&#10;bKash 01973245450 Mehdi"></textarea>
                 <p style="margin:4px 0 0;font-size:11px;color:#888;">Custom accounts for this event. Leave empty to use global methods from Settings &rarr; Registration.</p>
             </div>
 

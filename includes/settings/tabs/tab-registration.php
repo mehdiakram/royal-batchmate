@@ -91,9 +91,9 @@
                     <div class="BatchMate-field-group">
                         <label for="reg_payment_methods"><?php esc_html_e( 'Payment Method Options / Accounts (One per line)', 'royal-batchmate' ); ?></label>
                         <textarea id="reg_payment_methods" name="reg_payment_methods" rows="5"
-                                  placeholder="<?php echo esc_attr( "01717-164695 (Firoz)\n01719-073668 (Bobi)\n01751-771222 (Awal)" ); ?>"
+                                  placeholder="<?php echo esc_attr( "bKash 01552333272 Royal\nbKash 01973245450 Mehdi" ); ?>"
                                   style="width:100%;font-family:monospace;font-size:13px;"><?php echo esc_textarea($reg_payment_methods); ?></textarea>
-                        <p class="BatchMate-field-hint"><?php printf( esc_html__( 'Enter payment methods, mobile numbers, or account info one per line (e.g. %s). These will appear as choices in the Payment Method dropdown in both Registration and Event forms (unless an event specifies its own custom methods).', 'royal-batchmate' ), '<code>01717-164695 (Firoz)</code>' ); ?></p>
+                        <p class="BatchMate-field-hint"><?php printf( esc_html__( 'Enter payment methods, mobile numbers, or account info one per line (e.g. %s). These will appear as choices in the Payment Method dropdown in both Registration and Event forms (unless an event specifies its own custom methods).', 'royal-batchmate' ), '<code>bKash 01552333272 Royal</code>' ); ?></p>
                     </div>
                 </div>
             </div>
