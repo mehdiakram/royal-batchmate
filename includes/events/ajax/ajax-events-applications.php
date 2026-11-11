@@ -86,20 +86,26 @@ function BatchMate_approve_event_application_ajax() {
 
     $wpdb->query( 'START TRANSACTION' );
     try {
-        // Option 3: If allow_non_members == 2 and applicant is a guest (member_id == 0 && rawdata_id > 0)
+        // Option 2 & 3 & 4: If allow_non_members >= 2 and applicant is a guest (member_id == 0 && rawdata_id > 0)
         // Automatically convert guest to full club member and create WP user!
-        if ( intval( $event->allow_non_members ) === 2 && $app->member_id == 0 && $app->rawdata_id > 0 ) {
+        if ( intval( $event->allow_non_members ) >= 2 && $app->member_id == 0 && $app->rawdata_id > 0 ) {
             $rawdata_table   = $wpdb->prefix . 'batchmate_rawdata';
             $bm_member_table = $wpdb->prefix . 'batchmate_member';
 
             $raw = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $rawdata_table WHERE id = %d", $app->rawdata_id ) );
-            if ( ! $raw ) {
+            if ( ! raw ) {
                 throw new Exception( 'Non-member data not found in rawdata records.' );
             }
 
-            // Check if member with this email or student_id already exists in batchmate_member
+            // Check if member with this cell_number, email, or student_id already exists in batchmate_member
             $existing_mid = 0;
-            if ( ! empty( $raw->email ) ) {
+            if ( ! empty( $raw->cell_number ) ) {
+                $existing_mid = (int) $wpdb->get_var( $wpdb->prepare(
+                    "SELECT id FROM $bm_member_table WHERE cell_number = %s LIMIT 1",
+                    $raw->cell_number
+                ) );
+            }
+            if ( ! $existing_mid && ! empty( $raw->email ) ) {
                 $existing_mid = (int) $wpdb->get_var( $wpdb->prepare(
                     "SELECT id FROM $bm_member_table WHERE email = %s LIMIT 1",
                     $raw->email
@@ -114,6 +120,25 @@ function BatchMate_approve_event_application_ajax() {
 
             if ( $existing_mid > 0 ) {
                 $target_member_id = $existing_mid;
+                // Auto-sync: update existing member's photo and details with the fresh submission!
+                $upd_data = array();
+                if ( ! empty( $raw->photo_url ) )            $upd_data['photo_url'] = $raw->photo_url;
+                if ( ! empty( $raw->name ) )                 $upd_data['name'] = $raw->name;
+                if ( ! empty( $raw->name_bn ) )              $upd_data['name_bn'] = $raw->name_bn;
+                if ( ! empty( $raw->blood_group ) )          $upd_data['blood_group'] = $raw->blood_group;
+                if ( ! empty( $raw->gender ) )               $upd_data['gender'] = $raw->gender;
+                if ( ! empty( $raw->institution ) )          $upd_data['institution'] = $raw->institution;
+                if ( ! empty( $raw->present_district ) )     $upd_data['present_district'] = $raw->present_district;
+                if ( ! empty( $raw->permanent_district ) )   $upd_data['permanent_district'] = $raw->permanent_district;
+                if ( ! empty( $raw->present_address ) )      $upd_data['present_address'] = $raw->present_address;
+                if ( ! empty( $raw->permanent_address ) )    $upd_data['permanent_address'] = $raw->permanent_address;
+                if ( ! empty( $raw->upazila ) )              $upd_data['upazila'] = $raw->upazila;
+                if ( ! empty( $raw->present_upazila ) )      $upd_data['present_upazila'] = $raw->present_upazila;
+                if ( ! empty( $upd_data ) ) {
+                    $wpdb->update( $bm_member_table, $upd_data, array( 'id' => $target_member_id ) );
+                }
+                // Update rawdata status
+                $wpdb->update( $rawdata_table, array( 'status' => 'approved' ), array( 'id' => $app->rawdata_id ), array( '%s' ), array( '%d' ) );
             } else {
                 // Generate next member ID
                 $max_mid = (int) $wpdb->get_var( "SELECT COALESCE(MAX(id), 0) FROM $bm_member_table" );

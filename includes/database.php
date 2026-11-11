@@ -299,6 +299,8 @@ function batchmate_create_base_tables() {
         event_date date NOT NULL,
         member_fee DECIMAL(10,2) NOT NULL DEFAULT 0.00,
         allow_non_members tinyint(1) NOT NULL DEFAULT 0,
+        direct_registration tinyint(1) NOT NULL DEFAULT 0,
+        direct_reg_text varchar(255) NOT NULL DEFAULT '',
         is_active tinyint(1) NOT NULL DEFAULT 0,
         location varchar(500) NOT NULL DEFAULT '',
         registered_url varchar(500) NOT NULL DEFAULT '',
@@ -990,6 +992,14 @@ function batchmate_ensure_saree_column() {
     $col_pm = $wpdb->get_col( "SHOW COLUMNS FROM {$event_table} LIKE 'payment_methods'" );
     if ( empty( $col_pm ) ) {
         $wpdb->query( "ALTER TABLE {$event_table} ADD COLUMN payment_methods text DEFAULT NULL AFTER has_saree" );
+    }
+    $col_dr = $wpdb->get_col( "SHOW COLUMNS FROM {$event_table} LIKE 'direct_registration'" );
+    if ( empty( $col_dr ) ) {
+        $wpdb->query( "ALTER TABLE {$event_table} ADD COLUMN direct_registration tinyint(1) NOT NULL DEFAULT 0 AFTER allow_non_members" );
+    }
+    $col_drt = $wpdb->get_col( "SHOW COLUMNS FROM {$event_table} LIKE 'direct_reg_text'" );
+    if ( empty( $col_drt ) ) {
+        $wpdb->query( "ALTER TABLE {$event_table} ADD COLUMN direct_reg_text varchar(255) NOT NULL DEFAULT '' AFTER direct_registration" );
     }
     $app_table = $wpdb->prefix . 'batchmate_event_application';
     $app_col = $wpdb->get_col( "SHOW COLUMNS FROM {$app_table} LIKE 'tshirt_size'" );

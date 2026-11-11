@@ -71,11 +71,18 @@
             <div class="BatchMate-efield-group" style="margin-top:16px;">
                 <label for="modal_event_allow_non_members" style="display:block;margin-bottom:4px;font-weight:600;color:#1e293b;">Registration Permissions (Non-Members)</label>
                 <select id="modal_event_allow_non_members" style="width:100%;height:38px;border-radius:6px;border:1px solid #ccd0d4;padding:0 10px;font-size:13px;background:#fff;color:#1e293b;">
-                    <option value="0"><?php esc_html_e( '1. Members Only', 'royal-batchmate' ); ?></option>
+                    <option value="0"><?php esc_html_e( '1. Members Only (সার্চ করে শুধু সদস্যরা)', 'royal-batchmate' ); ?></option>
                     <option value="1"><?php esc_html_e( '2. Non-Members Allowed (as Guests)', 'royal-batchmate' ); ?></option>
-                    <option value="2"><?php esc_html_e( '3. Direct Member on Approval (Non-Members become full members)', 'royal-batchmate' ); ?></option>
+                    <option value="2"><?php esc_html_e( '3. Direct Member on Approval (Search + Switch to Form)', 'royal-batchmate' ); ?></option>
+                    <option value="3"><?php esc_html_e( '4. Direct Form Only (সরাসরি ফর্ম — কোনো সার্চ থাকবে না)', 'royal-batchmate' ); ?></option>
                 </select>
-                <p style="margin:4px 0 0;font-size:12px;color:#888;"><?php esc_html_e( 'Option 3 automatically creates and activates a full member account when a non-member application is approved.', 'royal-batchmate' ); ?></p>
+                <p style="margin:4px 0 0;font-size:12px;color:#888;"><?php esc_html_e( 'Option 3 & 4 automatically create full member accounts on approval. Option 4 opens the registration form directly without any search box.', 'royal-batchmate' ); ?></p>
+            </div>
+
+            <div class="BatchMate-efield-group" id="wrap_event_direct_reg_text" style="margin-top:12px;">
+                <label for="modal_event_direct_reg_text" style="display:block;margin-bottom:4px;font-weight:600;color:#1e293b;">Direct Registration Form Title / Button Text <span style="font-size:12px;color:#888;font-weight:400;">(optional)</span></label>
+                <input type="text" id="modal_event_direct_reg_text" placeholder="e.g. রেজিষ্ট্রেশন + ইভেন্ট রেজিষ্ট্রেশন" style="width:100%;height:38px;border-radius:6px;border:1px solid #ccd0d4;padding:0 10px;font-size:13px;background:#fff;color:#1e293b;">
+                <p style="margin:4px 0 0;font-size:11px;color:#888;">Custom text for the form title or button (Option 3 &amp; 4). Leave empty for default text.</p>
             </div>
 
             <div class="BatchMate-efield-group BatchMate-toggle-group" style="margin-top:16px;">

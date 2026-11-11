@@ -15,13 +15,13 @@ function batchmate_event_form_shortcode( $atts ) {
 
     global $wpdb;
     $event = $wpdb->get_row( $wpdb->prepare(
-        "SELECT id, event_name, event_date, allow_non_members, location, has_tshirt, has_saree FROM {$wpdb->prefix}batchmate_event WHERE id = %d AND is_active = 1",
+        "SELECT id, event_name, event_date, allow_non_members, location, has_tshirt, has_saree, direct_reg_text FROM {$wpdb->prefix}batchmate_event WHERE id = %d AND is_active = 1",
         $event_id
     ) );
     if ( ! $event ) {
         // Backward compat: try without has_saree
         $event = $wpdb->get_row( $wpdb->prepare(
-            "SELECT id, event_name, event_date, allow_non_members, location, has_tshirt, 0 as has_saree FROM {$wpdb->prefix}batchmate_event WHERE id = %d AND is_active = 1",
+            "SELECT id, event_name, event_date, allow_non_members, location, has_tshirt, 0 as has_saree, '' as direct_reg_text FROM {$wpdb->prefix}batchmate_event WHERE id = %d AND is_active = 1",
             $event_id
         ) );
     }
@@ -142,8 +142,36 @@ function batchmate_event_form_shortcode( $atts ) {
         </div>
     </div>
 
-    <!-- Direct Search Box (Always visible upfront - no confusing 3 buttons) -->
-    <div class="BatchMate-ef-search-box" id="BatchMate-ef-search-wrap-<?php echo $event_id; ?>">
+    <?php
+    $allow_non_members = intval( $event->allow_non_members );
+    $is_direct_only    = ( $allow_non_members === 3 );
+    $custom_reg_text   = ! empty( $event->direct_reg_text ) ? $event->direct_reg_text : '';
+
+    if ( empty( $custom_reg_text ) ) {
+        if ( $allow_non_members >= 2 ) {
+            $custom_reg_text = ( $allow_non_members === 3 ) 
+                ? 'Membership &amp; Event Registration' 
+                : 'Not a member yet? Register for Membership &amp; Event &rarr;';
+        } else {
+            $custom_reg_text = 'Not a member? Register as Guest &rarr;';
+        }
+    }
+    ?>
+
+    <?php if ( $allow_non_members === 2 ) : ?>
+    <!-- Mode Switcher Tabs (Only when Search + Direct is active) -->
+    <div class="BatchMate-ef-switcher" id="BatchMate-ef-switcher-<?php echo $event_id; ?>" style="display:flex; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
+        <button type="button" class="BatchMate-ef-switch-tab active" data-tab="search" id="BatchMate-ef-tab-search-<?php echo $event_id; ?>" style="flex:1; padding:13px 18px; border:none; background:#fff; font-weight:700; color:#1e3a8a; border-bottom:3px solid #2563eb; cursor:pointer; font-size:14px; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:all .2s;">
+            <span class="dashicons dashicons-search" style="font-size:16px;"></span> <?php esc_html_e( 'Search Existing Profile', 'royal-batchmate' ); ?>
+        </button>
+        <button type="button" class="BatchMate-ef-switch-tab" data-tab="direct" id="BatchMate-ef-tab-direct-<?php echo $event_id; ?>" style="flex:1; padding:13px 18px; border:none; background:#f8fafc; font-weight:600; color:#64748b; border-bottom:3px solid transparent; cursor:pointer; font-size:14px; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:all .2s;">
+            <span class="dashicons dashicons-id-alt" style="font-size:16px;"></span> <?php echo esc_html( $custom_reg_text ); ?>
+        </button>
+    </div>
+    <?php endif; ?>
+
+    <!-- Direct Search Box (Hidden if Option 4 Direct Form Only) -->
+    <div class="BatchMate-ef-search-box" id="BatchMate-ef-search-wrap-<?php echo $event_id; ?>" <?php if ( $is_direct_only ) echo 'style="display:none;"'; ?>>
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
             <label class="BatchMate-ef-label" for="BatchMate-ef-search-<?php echo $event_id; ?>">
                 &#128269; Search Your Information
@@ -163,13 +191,9 @@ function batchmate_event_form_shortcode( $atts ) {
             <p class="BatchMate-ef-live-hint" id="BatchMate-ef-char-hint-<?php echo $event_id; ?>" style="margin:0;">
                 &#9660; Results appear automatically after 3 characters.
             </p>
-            <?php if ( $event->allow_non_members ) : 
-                $direct_reg_text = ($event->allow_non_members == 2) 
-                    ? 'Not a member yet? Register for Membership &amp; Event &rarr;' 
-                    : 'Not a member? Register as Guest &rarr;';
-            ?>
+            <?php if ( $event->allow_non_members ) : ?>
             <button type="button" class="BatchMate-ef-direct-reg-btn" id="BatchMate-ef-direct-reg-btn-<?php echo $event_id; ?>" style="background:none; border:none; color:#2271b1; font-size:13px; font-weight:600; cursor:pointer; text-decoration:underline; padding:0;">
-                <?php echo $direct_reg_text; ?>
+                <?php echo $custom_reg_text; ?>
             </button>
             <?php endif; ?>
         </div>
@@ -332,6 +356,7 @@ function batchmate_event_form_shortcode( $atts ) {
     var _bmUpazilas   = <?php echo $bd_upazilas_json; ?>;
     var _bmCountries  = <?php echo $countries_json; ?>;
     var _isCurrentGuest = false;
+    var customDirectRegTitle = <?php echo wp_json_encode( ! empty( $event->direct_reg_text ) ? $event->direct_reg_text : '' ); ?>;
 
     var $actionBtns   = $('#BatchMate-ef-action-btns-' + evtId);
     var $searchWrap   = $('#BatchMate-ef-search-wrap-' + evtId);
@@ -348,17 +373,37 @@ function batchmate_event_form_shortcode( $atts ) {
         $hint.removeClass('typing').html('&#9660; Results appear automatically after 3 characters.');
     }
 
-    // "Register here" link -> open non-member form directly
-    $('#BatchMate-ef-direct-reg-btn-' + evtId).on('click', function() {
+    function switchToDirect() {
+        $('#BatchMate-ef-tab-search-' + evtId).removeClass('active').css({ 'background':'#f8fafc', 'color':'#64748b', 'border-bottom':'3px solid transparent' });
+        $('#BatchMate-ef-tab-direct-' + evtId).addClass('active').css({ 'background':'#fff', 'color':'#1e3a8a', 'border-bottom':'3px solid #2563eb' });
+        $searchWrap.slideUp(180);
         renderMemberForm({
             member: { is_guest: true },
             already: false
         });
-    });
+    }
+
+    function switchToSearch() {
+        $('#BatchMate-ef-tab-direct-' + evtId).removeClass('active').css({ 'background':'#f8fafc', 'color':'#64748b', 'border-bottom':'3px solid transparent' });
+        $('#BatchMate-ef-tab-search-' + evtId).addClass('active').css({ 'background':'#fff', 'color':'#1e3a8a', 'border-bottom':'3px solid #2563eb' });
+        $result.html('');
+        $searchWrap.slideDown(180);
+        $input.val('').focus();
+        lastQ = '';
+        $hint.removeClass('typing').html('&#9660; Results appear automatically after 3 characters.');
+    }
+
+    $('#BatchMate-ef-tab-direct-' + evtId).on('click', switchToDirect);
+    $('#BatchMate-ef-tab-search-' + evtId).on('click', switchToSearch);
+    $('#BatchMate-ef-direct-reg-btn-' + evtId).on('click', switchToDirect);
 
     // Back button -> return to search
     $(document).on('click', '.BatchMate-ef-guest-back-btn, #BatchMate-ef-back-' + evtId, function() {
-        resetSearch();
+        if (allowNonMembers === 2) {
+            switchToSearch();
+        } else if (allowNonMembers !== 3) {
+            resetSearch();
+        }
     });
     var timer     = null;
     var lastQ     = '';
@@ -808,8 +853,10 @@ function batchmate_event_form_shortcode( $atts ) {
         var isFemaleGuest   = false;
 
         if (isGuest) {
-            var isDirectMemberMode = (allowNonMembers === 2);
-            var headerTitle = isDirectMemberMode ? 'Membership &amp; Event Registration' : 'Guest Registration';
+            var isDirectMemberMode = (allowNonMembers === 2 || allowNonMembers === 3);
+            var customHeader = customDirectRegTitle || '';
+            var defaultTitle = isDirectMemberMode ? 'Membership &amp; Event Registration' : 'Guest Registration';
+            var headerTitle = customHeader ? customHeader : defaultTitle;
             var subMsg = isDirectMemberMode
                 ? 'Fill in your details to register for the event and apply for lifetime membership!'
                 : 'Please provide your information below to register as a guest for this event.';
@@ -817,11 +864,15 @@ function batchmate_event_form_shortcode( $atts ) {
                 ? ' <span style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:700;margin-left:8px;display:inline-flex;align-items:center;gap:4px;">&#9733; Direct Member on Approval</span>'
                 : ' <span style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600;margin-left:8px;">Guest</span>';
 
+            var backBtnHtml = (allowNonMembers === 3)
+                ? ''
+                : '<button type="button" class="BatchMate-ef-back-btn BatchMate-ef-guest-back-btn">&#8592; Search Another</button>';
+
             headerHtml = '<div class="BatchMate-ef-card-header">' +
                 '<div class="BatchMate-ef-card-info" style="width:100%;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">' +
                 '<div><h4 style="margin:0 0 4px;display:flex;align-items:center;flex-wrap:wrap;">' + headerTitle + badgeHtml + '</h4>' +
                 '<p style="margin:0;font-size:13px;color:#64748b;">' + subMsg + '</p></div>' +
-                '<button type="button" class="BatchMate-ef-back-btn BatchMate-ef-guest-back-btn">&#8592; Search Another</button>' +
+                backBtnHtml +
                 '</div></div>';
 
             guestFieldsHtml = buildGuestFormHtml('Male');
@@ -1394,6 +1445,15 @@ function batchmate_event_form_shortcode( $atts ) {
             $btn.prop('disabled', false).html('&#10003; Confirm Registration');
         });
     });
+
+    // Option 4: Direct Form Only -> immediately load the form on page ready!
+    if (allowNonMembers === 3) {
+        $searchWrap.hide();
+        renderMemberForm({
+            member: { is_guest: true },
+            already: false
+        });
+    }
 
 })(jQuery);
 

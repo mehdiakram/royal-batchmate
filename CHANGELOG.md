@@ -2,6 +2,31 @@
 
 All notable changes to the **Royal BatchMate** plugin will be documented in this file.
 
+## [26.11.13] - 2026-11-11
+
+### Added
+- **Direct Form Only Mode (Option 4):** Added `4. Direct Form Only (সরাসরি ফর্ম — কোনো সার্চ থাকবে না)` in the Edit Event modal. When enabled, the event registration page completely bypasses the search box and displays the full membership & event registration form upfront with fresh photo upload and payment fields.
+- **Custom Form Title / Button Text:** Added a custom text field in the Edit Event modal allowing administrators to rename the direct registration form title or button (e.g. `রেজিষ্ট্রেশন + ইভেন্ট রেজিষ্ট্রেশন`).
+- **Segmented Mode Switcher Tabs (Option 3):** Added interactive tabs (`Search Existing Profile` vs `Register for Membership & Event`) when Option 3 is enabled, allowing seamless toggling between searching and direct registration.
+- **Smart Member Profile Auto-Sync on Approval:** When an applicant submits a direct registration whose mobile number or email matches an existing member, approving the application automatically updates the member's profile with the freshly uploaded photo, corrected name, and district info.
+
+## [26.11.12] - 2026-11-11
+
+### Fixed
+- **Plugin Activation BOM Fix:** Removed 3-byte UTF-8 Byte Order Mark (BOM) from `shortcode-ec.php`, `admin-dashboard-page.php`, and `royal-batchmate.json`, completely resolving the WordPress "plugin generated 3 characters of unexpected output during activation" and "headers already sent" warnings.
+- **Event CC Email Delivery:** Fixed issue where event registration submissions omitted `cc_email` from the database query and mail headers. All event registration notifications, approval confirmations, and card resends now reliably deliver copies to configured event CC email address(es).
+- **Multi-Address CC Support:** Added `batchmate_get_cc_headers()` helper to cleanly parse, sanitize, and validate comma-separated CC recipients.
+- **Recipient Fallback for Registrations:** Allowed event confirmation emails to deliver directly to the event CC email address even if the applicant did not specify an email address.
+
+### Changed
+- **Default Payment Methods:** Updated payment method accounts and placeholders to `bKash 01552333272 Royal` and `bKash 01973245450 Mehdi` across event form modals and registration settings.
+
+## [26.11.11] - 2026-11-11
+
+### Added
+- **Elementor Event Form Widget:** Dedicated Elementor widget with live styling controls (gradients, solid colors, typography, search box border styling).
+- **GitHub Auto-Updater:** Integrated updater with release packaging and official branding assets.
+
 ## [26.11.10] - 2026-11-10
 
 ### Added

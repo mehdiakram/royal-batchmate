@@ -1265,6 +1265,7 @@ jQuery(document).ready(function($) {
                             data-location="${(row.location||'').replace(/"/g,'&quot;')}"
                             data-registeredurl="${(row.registered_url||'').replace(/"/g,'&quot;')}"
                             data-allownonmembers="${row.allow_non_members}"
+                            data-directregtext="${(row.direct_reg_text||'').replace(/"/g,'&quot;')}"
                             data-hasidcard="${row.has_id_card}"
                             data-autosendcard="${row.auto_send_card}"
                             data-hastshirt="${row.has_tshirt||0}"
@@ -2158,6 +2159,7 @@ jQuery(document).ready(function($) {
         $('#modal_event_location').val('');
         $('#modal_event_registered_url').val('');
         $('#modal_event_allow_non_members').val('0');
+        $('#modal_event_direct_reg_text').val('');
         $('#modal_event_has_id_card').prop('checked', false);
         $('#modal_event_auto_send_card').prop('checked', false);
         $('#modal_event_has_tshirt').prop('checked', false);
@@ -2198,6 +2200,7 @@ jQuery(document).ready(function($) {
                 member_fee: $('#modal_event_fee').val() || 0,
                 is_active: $('#modal_event_active').is(':checked') ? 1 : 0,
                 allow_non_members: parseInt($('#modal_event_allow_non_members').val()) || 0,
+                direct_reg_text: $.trim($('#modal_event_direct_reg_text').val()),
                 has_id_card: $('#modal_event_has_id_card').is(':checked') ? 1 : 0,
                 auto_send_card: $('#modal_event_auto_send_card').is(':checked') ? 1 : 0,
                 has_tshirt: $('#modal_event_has_tshirt').is(':checked') ? 1 : 0,
@@ -2227,6 +2230,7 @@ jQuery(document).ready(function($) {
         $('#modal_event_registered_url').val($b.data('registeredurl'));
         $('#modal_event_active').prop('checked', $b.data('active') == 1);
         $('#modal_event_allow_non_members').val(String($b.data('allownonmembers') || 0));
+        $('#modal_event_direct_reg_text').val($b.attr('data-directregtext') || '');
         $('#modal_event_has_id_card').prop('checked', $b.data('hasidcard') == 1);
         $('#modal_event_auto_send_card').prop('checked', $b.data('autosendcard') == 1);
         $('#modal_event_has_tshirt').prop('checked', $b.data('hastshirt') == 1);

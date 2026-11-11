@@ -31,7 +31,7 @@ function BatchMate_get_events_ajax() {
 
     $events = $wpdb->get_results( "
         SELECT id, event_name, event_date, member_fee, is_active, allow_non_members, has_id_card, auto_send_card,
-               has_tshirt, has_saree, cc_email, location, registered_url, card_template_url, card_zones_json, payment_methods
+               has_tshirt, has_saree, cc_email, location, registered_url, card_template_url, card_zones_json, payment_methods, direct_reg_text
         FROM {$wpdb->prefix}batchmate_event
         ORDER BY id DESC
     " );
@@ -39,7 +39,7 @@ function BatchMate_get_events_ajax() {
     if ( $events === null || ( empty( $events ) && ! empty( $wpdb->last_error ) ) ) {
         $events = $wpdb->get_results( "
             SELECT id, event_name, event_date, member_fee, is_active, allow_non_members, has_id_card, auto_send_card,
-                   has_tshirt, 0 as has_saree, cc_email, location, registered_url, card_template_url, card_zones_json, '' AS payment_methods
+                   has_tshirt, 0 as has_saree, cc_email, location, registered_url, card_template_url, card_zones_json, '' AS payment_methods, '' AS direct_reg_text
             FROM {$wpdb->prefix}batchmate_event
             ORDER BY id DESC
         " );
@@ -66,6 +66,7 @@ function BatchMate_save_event_ajax() {
     $member_fee = floatval( $_POST['member_fee'] ?? 0 );
     $is_active         = intval( $_POST['is_active'] ?? 0 );
     $allow_non_members = intval( $_POST['allow_non_members'] ?? 0 );
+    $direct_reg_text   = sanitize_text_field( $_POST['direct_reg_text'] ?? '' );
     $has_id_card       = intval( $_POST['has_id_card'] ?? 0 );
     $auto_send_card    = intval( $_POST['auto_send_card'] ?? 0 );
     $has_tshirt        = intval( $_POST['has_tshirt'] ?? 0 );
@@ -125,9 +126,10 @@ function BatchMate_save_event_ajax() {
                 'registered_url'     => $registered_url,
                 'card_template_url'  => $card_template_url,
                 'card_zones_json'    => $card_zones_json ?: null,
+                'direct_reg_text'    => $direct_reg_text ?: null,
             ),
             array( 'id' => $event_id ),
-            array( '%s', '%s', '%f', '%d', '%d', '%d', '%d', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s' ),
+            array( '%s', '%s', '%f', '%d', '%d', '%d', '%d', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s' ),
             array( '%d' )
         );
         if ( $result === false ) wp_send_json_error( 'Database error while updating.' );
@@ -150,9 +152,10 @@ function BatchMate_save_event_ajax() {
                 'registered_url'     => $registered_url,
                 'card_template_url'  => $card_template_url,
                 'card_zones_json'    => $card_zones_json ?: null,
+                'direct_reg_text'    => $direct_reg_text ?: null,
                 'created_by'         => get_current_user_id(),
             ),
-            array( '%s', '%s', '%f', '%d', '%d', '%d', '%d', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d' )
+            array( '%s', '%s', '%f', '%d', '%d', '%d', '%d', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%d' )
         );
         if ( $result === false ) wp_send_json_error( 'Database error while saving.' );
         $event_id = $wpdb->insert_id;

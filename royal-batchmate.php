@@ -3,7 +3,7 @@
  * Plugin Name:       Royal BatchMate
  * Plugin URI:        https://www.royaltechbd.com
  * Description:       SSC Batch Community — Member Directory, Events, Payments, Executive Committee & Reunion Management.
- * Version:           26.11.11
+ * Version:           26.11.13
  * Author:            Royal Technologies
  * Author URI:        https://www.royaltechbd.com
  * License:           Proprietary
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 // ============================================================
 // CONSTANTS
 // ============================================================
-define( 'ROYAL_BATCHMATE_VERSION',    '26.11.11' );
+define( 'ROYAL_BATCHMATE_VERSION',    '26.11.13' );
 define( 'ROYAL_BATCHMATE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ROYAL_BATCHMATE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'ROYAL_BATCHMATE_PLUGIN_FILE', __FILE__ );
