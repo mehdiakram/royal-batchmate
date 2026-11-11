@@ -2,6 +2,15 @@
 
 All notable changes to the **Royal BatchMate** plugin will be documented in this file.
 
+## [26.11.14] - 2026-11-11
+
+### Fixed
+- **Plugin Auto-Updater & BOM Resilience:** Sanitized UTF-8 BOM removal in remote update JSON responses and added cache-busting timestamp queries (`rbm_check`) to ensure GitHub update checks never fail or serve stale CDN caches.
+- **Push Automation Script:** Updated `Push-RoyalBatchMate.bat` to strictly generate `royal-batchmate.json` in UTF-8 without BOM so automated updates always decode properly.
+
+### Changed
+- **Event Modal Localization:** Converted all Edit Event modal registration permission options and form title placeholders to clean English (`1. Members Only (Search Required)`, `4. Direct Form Only (Open Form Directly — No Search)`).
+
 ## [26.11.13] - 2026-11-11
 
 ### Added

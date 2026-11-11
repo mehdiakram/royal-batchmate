@@ -67,13 +67,16 @@ class Royal_BatchMate_Updater {
             return $transient;
         }
 
-        $response = wp_remote_get( $this->update_json_url, array( 'timeout' => 10, 'sslverify' => false ) );
+        $update_url = add_query_arg( 'rbm_check', time(), $this->update_json_url );
+        $response   = wp_remote_get( $update_url, array( 'timeout' => 10, 'sslverify' => false ) );
 
         if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
             return $transient;
         }
 
-        $update_data = json_decode( wp_remote_retrieve_body( $response ) );
+        $raw_body    = wp_remote_retrieve_body( $response );
+        $clean_body  = preg_replace( '/^\xEF\xBB\xBF/', '', trim( $raw_body ) );
+        $update_data = json_decode( $clean_body );
 
         if ( ! is_object( $update_data ) || empty( $update_data->version ) ) {
             return $transient;
@@ -192,13 +195,16 @@ class Royal_BatchMate_Updater {
         
         if ( isset( $args->slug ) && $args->slug === basename( $this->plugin_slug, '.php' ) ) {
             
-            $response = wp_remote_get( $this->update_json_url, array( 'timeout' => 10, 'sslverify' => false ) );
+            $update_url = add_query_arg( 'rbm_check', time(), $this->update_json_url );
+            $response   = wp_remote_get( $update_url, array( 'timeout' => 10, 'sslverify' => false ) );
 
             if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
                 return $result;
             }
 
-            $update_data = json_decode( wp_remote_retrieve_body( $response ) );
+            $raw_body    = wp_remote_retrieve_body( $response );
+            $clean_body  = preg_replace( '/^\xEF\xBB\xBF/', '', trim( $raw_body ) );
+            $update_data = json_decode( $clean_body );
 
             if ( is_object( $update_data ) ) {
                 $plugin_data = get_plugin_data( $this->plugin_file );
