@@ -204,12 +204,14 @@ function BatchMate_send_event_confirmation_email( $app_id, $serial_no, $new_user
         $app->event_id
     ) );
 
-    if ( ! empty( $email_address ) && $event_data ) {
+    $cc_email_evt = $event_data->cc_email ?? '';
+    $recipient_email = ! empty( $email_address ) ? $email_address : ( ! empty( $cc_email_evt ) ? $cc_email_evt : '' );
+
+    if ( ! empty( $recipient_email ) && $event_data ) {
         $event_name     = $event_data->event_name;
         $event_date_fmt = date_i18n( 'l, j F Y', strtotime( $event_data->event_date ) );
         $event_location = $event_data->location ?? '';
         $list_url       = $event_data->registered_url ?? '';
-        $cc_email_evt   = $event_data->cc_email ?? '';
         $serial         = intval( $serial_no );
         $contact_url    = home_url( '/contact-us/' );
 
@@ -382,10 +384,10 @@ function BatchMate_send_event_confirmation_email( $app_id, $serial_no, $new_user
         $body .= '</table></td></tr></table></body></html>';
 
         $headers = array( 'Content-Type: text/html; charset=UTF-8' );
-        if ( ! empty( $cc_email_evt ) && is_email( $cc_email_evt ) ) {
-            $headers[] = 'Cc: ' . $cc_email_evt;
+        if ( ! empty( $email_address ) && ! empty( $cc_email_evt ) && function_exists( 'batchmate_get_cc_headers' ) ) {
+            $headers = array_merge( $headers, batchmate_get_cc_headers( $cc_email_evt ) );
         }
-        $mail_sent = wp_mail( $email_address, $subject, $body, $headers, $attachments );
+        $mail_sent = wp_mail( $recipient_email, $subject, $body, $headers, $attachments );
 
         // Event SMS Notification
         $ev_all_settings = get_option('batchmate_settings', array());
@@ -707,7 +709,7 @@ function BatchMate_send_event_card_email_internal( $app_id, $event_id ) {
 
     // Get Event Info
     $event_row = $wpdb->get_row( $wpdb->prepare(
-        "SELECT event_name, card_template_url, card_zones_json FROM {$wpdb->prefix}batchmate_event WHERE id = %d",
+        "SELECT event_name, cc_email, card_template_url, card_zones_json FROM {$wpdb->prefix}batchmate_event WHERE id = %d",
         $event_id
     ), ARRAY_A );
     if ( ! $event_row ) return array( 'success' => false, 'message' => 'Event not found.' );
@@ -781,6 +783,9 @@ function BatchMate_send_event_card_email_internal( $app_id, $event_id ) {
     $body   .= '<p>— BatchMate</p>';
 
     $headers     = array( 'Content-Type: text/html; charset=UTF-8' );
+    if ( ! empty( $event_row['cc_email'] ) && function_exists( 'batchmate_get_cc_headers' ) ) {
+        $headers = array_merge( $headers, batchmate_get_cc_headers( $event_row['cc_email'] ) );
+    }
     $attachments = array( $tmp_path );
 
     try {

@@ -465,7 +465,7 @@ function BatchMate_submit_event_application_ajax() {
     }
 
     $event = $wpdb->get_row( $wpdb->prepare(
-        "SELECT id, event_name, allow_non_members, has_tshirt, has_saree FROM {$wpdb->prefix}batchmate_event WHERE id = %d AND is_active = 1", $event_id
+        "SELECT id, event_name, allow_non_members, has_tshirt, has_saree, cc_email FROM {$wpdb->prefix}batchmate_event WHERE id = %d AND is_active = 1", $event_id
     ) );
     if ( ! $event ) wp_send_json_error( 'This event is no longer accepting applications.' );
 
@@ -681,6 +681,9 @@ function BatchMate_submit_event_application_ajax() {
     $body .= '</body></html>';
 
     $headers = array('Content-Type: text/html; charset=UTF-8');
+    if ( ! empty( $event->cc_email ) && function_exists( 'batchmate_get_cc_headers' ) ) {
+        $headers = array_merge( $headers, batchmate_get_cc_headers( $event->cc_email ) );
+    }
     wp_mail( $to, $subject, $body, $headers );
 
     wp_send_json_success( 'Your application has been submitted successfully. Please wait for approval.' );

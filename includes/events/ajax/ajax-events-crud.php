@@ -71,7 +71,9 @@ function BatchMate_save_event_ajax() {
     $has_tshirt        = intval( $_POST['has_tshirt'] ?? 0 );
     $has_saree         = intval( $_POST['has_saree'] ?? 0 );
     $payment_methods   = sanitize_textarea_field( $_POST['payment_methods'] ?? '' );
-    $cc_email          = sanitize_email( $_POST['cc_email'] ?? '' );
+    $raw_cc            = sanitize_text_field( $_POST['cc_email'] ?? '' );
+    $cc_parts          = array_filter( array_map( 'sanitize_email', preg_split( '/[,;]+/', $raw_cc ) ) );
+    $cc_email          = implode( ', ', array_filter( $cc_parts, 'is_email' ) );
     $location          = sanitize_textarea_field( $_POST['location'] ?? '' );
     $registered_url    = esc_url_raw( trim( $_POST['registered_url'] ?? '' ) );
     $card_template_url   = esc_url_raw( trim( $_POST['card_template_url'] ?? '' ) );

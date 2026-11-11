@@ -2232,7 +2232,7 @@ jQuery(document).ready(function($) {
         $('#modal_event_has_tshirt').prop('checked', $b.data('hastshirt') == 1);
         $('#modal_event_has_saree').prop('checked', $b.data('hassaree') == 1);
         $('#modal_event_payment_methods').val($b.attr('data-paymentmethods') || '');
-        $('#modal_event_cc_email').val($b.data('ccemail') || '');
+        $('#modal_event_cc_email').val($b.attr('data-ccemail') || $b.data('ccemail') || '');
         $('#modal_card_template_url').val($b.attr('data-cardtemplateurl') || '');
         $('#modal_card_zones_json').val($b.attr('data-cardzonesjson') || '');
         $('#BatchMate-event-modal-title').text('Edit Event');

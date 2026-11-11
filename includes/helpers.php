@@ -369,4 +369,20 @@ add_filter( 'http_request_args', function( $args ) {
     return $args;
 } );
 
-// ============================================================
+/**
+ * Return array of 'Cc: email' header lines from a comma-separated or single string.
+ */
+function batchmate_get_cc_headers( ?string $cc_email_str ): array {
+    $headers = array();
+    if ( empty( $cc_email_str ) ) {
+        return $headers;
+    }
+    $parts = preg_split( '/[,;]+/', $cc_email_str );
+    foreach ( $parts as $p ) {
+        $clean = sanitize_email( trim( $p ) );
+        if ( is_email( $clean ) ) {
+            $headers[] = 'Cc: ' . $clean;
+        }
+    }
+    return $headers;
+}
