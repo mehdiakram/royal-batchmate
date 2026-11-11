@@ -1,17 +1,17 @@
-{
-  "version": "26.11.11",
-  "homepage": "https://github.com/mehdiakram/royal-batchmate",
-  "download_url": "https://github.com/mehdiakram/royal-batchmate/releases/latest/download/royal-batchmate.zip",
-  "banners": {
-    "low": "https://raw.githubusercontent.com/mehdiakram/royal-batchmate/main/assets/images/royal-batchmate-772x250.jpg",
-    "high": "https://raw.githubusercontent.com/mehdiakram/royal-batchmate/main/assets/images/royal-batchmate-1544x500.jpg"
-  },
-  "icons": {
-    "1x": "https://raw.githubusercontent.com/mehdiakram/royal-batchmate/main/assets/images/icon-128x128.png",
-    "2x": "https://raw.githubusercontent.com/mehdiakram/royal-batchmate/main/assets/images/icon-256x256.png"
-  },
-  "sections": {
-    "description": "Royal BatchMate is a complete community, membership directory, reunion, and event management platform for WordPress. Built for SSC, HSC, and University alumni batches.",
-    "changelog": "<ul>\n\t<li><strong>26.11.11:</strong> Added dedicated Elementor Event Form Widget with live style customization (custom gradients, solid colors, typography, search box border styling). Fixed search box border visibility issues. Added complete automated GitHub Updater with release packaging and beautiful official branding graphics.</li>\n\t<li><strong>26.11.10:</strong> Event registration live search optimization and debounce performance improvements.</li>\n\t<li><strong>26.11.01:</strong> Executive Committee and financial collection report improvements.</li>\n</ul>"
-  }
+﻿{
+    "version":  "26.11.11",
+    "homepage":  "https://github.com/mehdiakram/royal-batchmate",
+    "download_url":  "https://github.com/mehdiakram/royal-batchmate/releases/latest/download/royal-batchmate.zip",
+    "banners":  {
+                    "low":  "https://raw.githubusercontent.com/mehdiakram/royal-batchmate/main/assets/images/royal-batchmate-772x250.jpg",
+                    "high":  "https://raw.githubusercontent.com/mehdiakram/royal-batchmate/main/assets/images/royal-batchmate-1544x500.jpg"
+                },
+    "icons":  {
+                  "1x":  "https://raw.githubusercontent.com/mehdiakram/royal-batchmate/main/assets/images/icon-128x128.png",
+                  "2x":  "https://raw.githubusercontent.com/mehdiakram/royal-batchmate/main/assets/images/icon-256x256.png"
+              },
+    "sections":  {
+                     "description":  "Royal BatchMate is a complete community, membership directory, reunion, and event management platform for WordPress. Built for SSC, HSC, and University alumni batches.",
+                     "changelog":  "\u003cul\u003e\n\t\u003cli\u003e\u003cstrong\u003e26.11.11:\u003c/strong\u003e Added dedicated Elementor Event Form Widget with live style customization (custom gradients, solid colors, typography, search box border styling). Fixed search box border visibility issues. Added complete automated GitHub Updater with release packaging and beautiful official branding graphics.\u003c/li\u003e\n\t\u003cli\u003e\u003cstrong\u003e26.11.10:\u003c/strong\u003e Event registration live search optimization and debounce performance improvements.\u003c/li\u003e\n\t\u003cli\u003e\u003cstrong\u003e26.11.01:\u003c/strong\u003e Executive Committee and financial collection report improvements.\u003c/li\u003e\n\u003c/ul\u003e"
+                 }
 }
