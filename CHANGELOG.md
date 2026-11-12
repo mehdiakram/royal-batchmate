@@ -2,6 +2,12 @@
 
 All notable changes to the **Royal BatchMate** plugin will be documented in this file.
 
+## [26.11.23] - 2026-11-12
+
+### Added
+- **Buffer Direct Connections (GraphQL API) in Multi-Webhook Settings:** Added a dedicated Buffer configuration panel inside **Automation -> Webhook Connections (Multi-Webhook)** (`tab-automation.php`, `admin-settings-page.php`, `admin-settings-ajax.php`, `admin-settings.js`) supporting a Buffer Personal API Key, one-click **Fetch Channels** discovery (`batchmate_fetch_buffer_channels`), multiple active Buffer channels with per-channel post modes (`shareNow`, `addToQueue`, `shareNext`), and a **Send Test Buffer Post** tester (`batchmate_test_buffer`).
+- **Simultaneous Webhook + Buffer Dispatch:** Updated `batchmate_dispatch_webhooks()` and added `batchmate_dispatch_buffer()`, `batchmate_buffer_graphql_request()`, and `batchmate_has_active_webhooks_or_buffer()` in `includes/automation-service.php` (plus checks in `includes/cron-jobs.php` and `includes/events/ajax/ajax-events-card.php`) so Birthday, Event Registration, and Member Approval events post to all active Webhook URLs and Buffer channels (`https://api.buffer.com` `createPost` mutation with `card_url` image assets) simultaneously.
+
 ## [26.11.22] - 2026-11-12
 
 ### Fixed

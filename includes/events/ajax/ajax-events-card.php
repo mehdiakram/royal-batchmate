@@ -9,7 +9,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  */
 function BatchMate_post_event_card_to_make_webhook( $app_id, $card_path = '', $serial_no = 0 ) {
     $settings    = get_option('batchmate_settings', array());
-    $has_wh      = ! empty($settings['webhook_urls']) || ! empty($settings['make_webhook_url']);
+    $has_wh      = function_exists('batchmate_has_active_webhooks_or_buffer')
+        ? batchmate_has_active_webhooks_or_buffer($settings)
+        : (! empty($settings['webhook_urls']) || ! empty($settings['make_webhook_url']));
     $webhook_url = isset($settings['make_webhook_url']) ? trim($settings['make_webhook_url']) : '';
 
     if ( ! $has_wh ) {
@@ -445,7 +447,9 @@ function BatchMate_resend_event_webhook_ajax() {
     if ( ! $serial ) wp_send_json_error( 'Member not registered or serial number missing.' );
 
     $settings = get_option('batchmate_settings', array());
-    $has_wh   = ! empty($settings['webhook_urls']) || ! empty($settings['make_webhook_url']);
+    $has_wh   = function_exists('batchmate_has_active_webhooks_or_buffer')
+        ? batchmate_has_active_webhooks_or_buffer($settings)
+        : (! empty($settings['webhook_urls']) || ! empty($settings['make_webhook_url']));
     if ( ! $has_wh ) {
         wp_send_json_error( 'No Webhook URL configured in Settings.' );
     }

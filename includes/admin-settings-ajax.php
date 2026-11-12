@@ -76,6 +76,26 @@ function batchmate_save_settings_ajax() {
         }
     }
 
+    // Buffer Direct Connections (GraphQL API)
+    $new_settings['buffer_enabled']  = isset( $_POST['buffer_enabled'] ) ? 'on' : 'off';
+    $new_settings['buffer_api_key']  = sanitize_text_field( trim( $_POST['buffer_api_key'] ?? '' ) );
+    $new_settings['buffer_channels'] = array();
+    if ( isset( $_POST['buffer_channels'] ) && is_array( $_POST['buffer_channels'] ) ) {
+        $allowed_modes = array( 'shareNow', 'addToQueue', 'shareNext' );
+        foreach ( $_POST['buffer_channels'] as $bc ) {
+            $channel_id = sanitize_text_field( trim( $bc['channel_id'] ?? '' ) );
+            if ( ! empty( $channel_id ) ) {
+                $mode = sanitize_text_field( $bc['mode'] ?? 'shareNow' );
+                $new_settings['buffer_channels'][] = array(
+                    'status'     => isset( $bc['status'] ) && $bc['status'] === 'on' ? 'on' : 'off',
+                    'name'       => sanitize_text_field( $bc['name'] ?? '' ),
+                    'channel_id' => $channel_id,
+                    'mode'       => in_array( $mode, $allowed_modes, true ) ? $mode : 'shareNow',
+                );
+            }
+        }
+    }
+
     // SMS Gateway Settings (sms.net.bd / Alpha SMS)
     $new_settings['sms_enabled']   = isset( $_POST['sms_enabled'] ) ? 'on' : 'off';
     $new_settings['sms_api_key']   = sanitize_text_field( $_POST['sms_api_key'] ?? '' );

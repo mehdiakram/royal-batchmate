@@ -176,7 +176,257 @@ function batchmate_get_sms_balance( $api_key = '' ) {
 }
 
 /**
- * Dispatch payload to multiple configured Webhook URLs
+ * Check if any standard Webhook URL or Buffer channel is configured and active
+ *
+ * @param array|null $settings
+ * @return bool
+ */
+function batchmate_has_active_webhooks_or_buffer( $settings = null ) {
+    if ( ! is_array( $settings ) ) {
+        $settings = get_option( 'batchmate_settings', array() );
+    }
+
+    if ( ! empty( $settings['make_webhook_url'] ) ) {
+        return true;
+    }
+
+    if ( ! empty( $settings['webhook_urls'] ) && is_array( $settings['webhook_urls'] ) ) {
+        foreach ( $settings['webhook_urls'] as $wh ) {
+            if ( is_array( $wh ) && ! empty( $wh['url'] ) && ( $wh['status'] ?? 'on' ) === 'on' ) {
+                return true;
+            }
+        }
+    }
+
+    if ( ( $settings['buffer_enabled'] ?? 'off' ) === 'on' && ! empty( $settings['buffer_api_key'] ) && ! empty( $settings['buffer_channels'] ) && is_array( $settings['buffer_channels'] ) ) {
+        foreach ( $settings['buffer_channels'] as $bc ) {
+            if ( is_array( $bc ) && ! empty( $bc['channel_id'] ) && ( $bc['status'] ?? 'on' ) === 'on' ) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Execute a GraphQL request against Buffer API (https://api.buffer.com)
+ *
+ * @param string $api_key
+ * @param string $query
+ * @param array  $variables
+ * @return array ['success' => bool, 'code' => int, 'data' => array|null, 'message' => string]
+ */
+function batchmate_buffer_graphql_request( $api_key, $query, $variables = array() ) {
+    $api_key = trim( (string) $api_key );
+    if ( empty( $api_key ) ) {
+        return array( 'success' => false, 'code' => 0, 'data' => null, 'message' => 'Buffer API Key is empty.' );
+    }
+
+    $body_data = array( 'query' => $query );
+    if ( ! empty( $variables ) ) {
+        $body_data['variables'] = $variables;
+    }
+
+    $res = wp_remote_post( 'https://api.buffer.com', array(
+        'body'      => wp_json_encode( $body_data ),
+        'headers'   => array(
+            'Content-Type'  => 'application/json; charset=utf-8',
+            'Authorization' => 'Bearer ' . $api_key,
+        ),
+        'timeout'   => 20,
+        'blocking'  => true,
+        'sslverify' => true,
+    ) );
+
+    if ( is_wp_error( $res ) ) {
+        return array(
+            'success' => false,
+            'code'    => 0,
+            'data'    => null,
+            'message' => $res->get_error_message(),
+        );
+    }
+
+    $code = (int) wp_remote_retrieve_response_code( $res );
+    $raw  = wp_remote_retrieve_body( $res );
+    $json = json_decode( $raw, true );
+
+    if ( ! empty( $json['errors'] ) && is_array( $json['errors'] ) ) {
+        $err_msg = $json['errors'][0]['message'] ?? 'Buffer GraphQL error.';
+        return array(
+            'success' => false,
+            'code'    => $code,
+            'data'    => $json['data'] ?? null,
+            'message' => $err_msg,
+        );
+    }
+
+    if ( $code < 200 || $code >= 300 || ! is_array( $json ) ) {
+        return array(
+            'success' => false,
+            'code'    => $code,
+            'data'    => null,
+            'message' => 'HTTP ' . $code . ( $raw ? ': ' . wp_strip_all_tags( substr( $raw, 0, 180 ) ) : '' ),
+        );
+    }
+
+    return array(
+        'success' => true,
+        'code'    => $code,
+        'data'    => $json['data'] ?? array(),
+        'message' => 'OK',
+    );
+}
+
+/**
+ * Build post text for Buffer from an automation payload
+ *
+ * @param array  $payload
+ * @param string $event_type
+ * @return string
+ */
+function batchmate_build_buffer_post_text( $payload, $event_type = 'general' ) {
+    if ( ! empty( $payload['message'] ) ) {
+        return trim( (string) $payload['message'] );
+    }
+
+    if ( $event_type === 'member_registration' || ( $payload['event'] ?? '' ) === 'member_approval' ) {
+        $name        = trim( (string) ( $payload['name'] ?? ( $payload['member_name'] ?? 'New Member' ) ) );
+        $member_num  = trim( (string) ( $payload['member_number'] ?? '' ) );
+        $profile_url = trim( (string) ( $payload['profile_url'] ?? '' ) );
+        $org         = function_exists( 'batchmate_org_label' ) ? batchmate_org_label( 'short' ) : 'BatchMate';
+
+        $lines   = array( "🎉 Welcome {$name} to {$org}!" );
+        if ( ! empty( $member_num ) ) {
+            $lines[] = "Member ID: {$member_num}";
+        }
+        if ( ! empty( $profile_url ) ) {
+            $lines[] = $profile_url;
+        }
+        return implode( "\n", $lines );
+    }
+
+    return trim( (string) ( $payload['event_name'] ?? 'Update from ' . home_url() ) );
+}
+
+/**
+ * Dispatch post(s) to configured Buffer channels via GraphQL createPost mutation
+ *
+ * @param array       $payload
+ * @param string      $event_type
+ * @param string|null $override_api_key
+ * @param array|null  $override_channels
+ * @return array ['dispatched' => int, 'results' => array]
+ */
+function batchmate_dispatch_buffer( $payload, $event_type = 'general', $override_api_key = null, $override_channels = null ) {
+    $settings = get_option( 'batchmate_settings', array() );
+
+    if ( $override_api_key === null && ( $settings['buffer_enabled'] ?? 'off' ) !== 'on' ) {
+        return array( 'dispatched' => 0, 'results' => array() );
+    }
+
+    $api_key  = $override_api_key !== null ? trim( (string) $override_api_key ) : trim( (string) ( $settings['buffer_api_key'] ?? '' ) );
+    $channels = is_array( $override_channels ) ? $override_channels : ( $settings['buffer_channels'] ?? array() );
+
+    if ( empty( $api_key ) || empty( $channels ) || ! is_array( $channels ) ) {
+        return array( 'dispatched' => 0, 'results' => array() );
+    }
+
+    $text      = batchmate_build_buffer_post_text( $payload, $event_type );
+    $card_url  = trim( (string) ( $payload['card_url'] ?? '' ) );
+    $has_image = ( ! empty( $card_url ) && filter_var( $card_url, FILTER_VALIDATE_URL ) );
+
+    $mutation = 'mutation CreatePost($input: CreatePostInput!) {
+        createPost(input: $input) {
+            ... on PostActionSuccess {
+                post {
+                    id
+                    status
+                }
+            }
+            ... on MutationError {
+                message
+            }
+        }
+    }';
+
+    $allowed_modes = array( 'shareNow', 'addToQueue', 'shareNext' );
+    $results       = array();
+
+    foreach ( $channels as $ch ) {
+        if ( ! is_array( $ch ) ) continue;
+        $status     = $ch['status'] ?? 'on';
+        $channel_id = trim( (string) ( $ch['channel_id'] ?? '' ) );
+        $label      = trim( (string) ( $ch['name'] ?? '' ) );
+        $mode       = trim( (string) ( $ch['mode'] ?? 'shareNow' ) );
+
+        if ( $status !== 'on' || empty( $channel_id ) ) {
+            continue;
+        }
+
+        if ( ! in_array( $mode, $allowed_modes, true ) ) {
+            $mode = 'shareNow';
+        }
+
+        $input = array(
+            'text'           => $text,
+            'channelId'      => $channel_id,
+            'schedulingType' => 'automatic',
+            'mode'           => $mode,
+        );
+
+        if ( $has_image ) {
+            $input['assets'] = array(
+                array(
+                    'image' => array(
+                        'url' => $card_url,
+                    ),
+                ),
+            );
+        }
+
+        $res        = batchmate_buffer_graphql_request( $api_key, $mutation, array( 'input' => $input ) );
+        $display_id = 'Buffer: ' . ( $label !== '' ? $label . ' (' . $channel_id . ')' : $channel_id );
+
+        if ( ! $res['success'] ) {
+            error_log( "[BatchMate Buffer] Error ({$channel_id}): " . $res['message'] );
+            $results[] = array(
+                'url'     => $display_id,
+                'success' => false,
+                'code'    => $res['code'],
+                'message' => $res['message'],
+            );
+            continue;
+        }
+
+        $create_post = $res['data']['createPost'] ?? array();
+        if ( ! empty( $create_post['post']['id'] ) ) {
+            $post_id = $create_post['post']['id'];
+            $p_stat  = $create_post['post']['status'] ?? $mode;
+            $results[] = array(
+                'url'     => $display_id,
+                'success' => true,
+                'code'    => $res['code'],
+                'message' => "Buffer Post ID: {$post_id} ({$p_stat})",
+            );
+        } else {
+            $err_msg = $create_post['message'] ?? 'Unknown Buffer mutation error.';
+            error_log( "[BatchMate Buffer] Mutation Error ({$channel_id}): " . $err_msg );
+            $results[] = array(
+                'url'     => $display_id,
+                'success' => false,
+                'code'    => $res['code'],
+                'message' => $err_msg,
+            );
+        }
+    }
+
+    return array( 'dispatched' => count( $results ), 'results' => $results );
+}
+
+/**
+ * Dispatch payload to multiple configured Webhook URLs (and active Buffer channels)
  *
  * @param array  $payload
  * @param string $event_type  'birthday', 'event_registration', 'member_registration', 'test'
@@ -223,10 +473,6 @@ function batchmate_dispatch_webhooks( $payload, $event_type = 'general', $overri
 
     $urls = array_unique( $urls );
 
-    if ( empty( $urls ) ) {
-        return array( 'dispatched' => 0, 'results' => array() );
-    }
-
     // Ensure metadata in payload
     $payload['event_type']    = $event_type;
     $payload['dispatched_at'] = current_time( 'mysql' );
@@ -260,6 +506,14 @@ function batchmate_dispatch_webhooks( $payload, $event_type = 'general', $overri
                 'code'    => $code,
                 'message' => 'HTTP ' . $code,
             );
+        }
+    }
+
+    // Simultaneously dispatch to configured Buffer channels when not running a URL-only override
+    if ( $override_urls === null ) {
+        $buffer_res = batchmate_dispatch_buffer( $payload, $event_type );
+        if ( ! empty( $buffer_res['results'] ) ) {
+            $results = array_merge( $results, $buffer_res['results'] );
         }
     }
 
@@ -461,3 +715,144 @@ function batchmate_test_webhooks_ajax() {
     wp_send_json_success( array( 'html' => $msg ) );
 }
 add_action( 'wp_ajax_batchmate_test_webhooks', 'batchmate_test_webhooks_ajax' );
+
+/**
+ * AJAX: Fetch Buffer Organizations & Channels
+ */
+function batchmate_fetch_buffer_channels_ajax() {
+    if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( $_POST['_wpnonce'], 'BatchMate_settings_nonce' ) ) {
+        wp_send_json_error( 'Security verification failed.', 403 );
+    }
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( 'Permission denied.', 403 );
+    }
+
+    $api_key = sanitize_text_field( trim( $_POST['api_key'] ?? '' ) );
+    if ( empty( $api_key ) ) {
+        $settings = get_option( 'batchmate_settings', array() );
+        $api_key  = trim( (string) ( $settings['buffer_api_key'] ?? '' ) );
+    }
+
+    if ( empty( $api_key ) ) {
+        wp_send_json_error( 'Please enter your Buffer API Key first.' );
+    }
+
+    $org_query = 'query GetOrganizations {
+        account {
+            organizations {
+                id
+                name
+            }
+        }
+    }';
+
+    $org_res = batchmate_buffer_graphql_request( $api_key, $org_query );
+    if ( ! $org_res['success'] ) {
+        wp_send_json_error( $org_res['message'] );
+    }
+
+    $orgs = $org_res['data']['account']['organizations'] ?? array();
+    if ( empty( $orgs ) ) {
+        wp_send_json_error( 'No Buffer organizations found for this API Key.' );
+    }
+
+    $ch_query = 'query GetChannels($organizationId: OrganizationId!) {
+        channels(input: { organizationId: $organizationId }) {
+            id
+            name
+            service
+        }
+    }';
+
+    $all_channels = array();
+    foreach ( $orgs as $org ) {
+        $org_id   = $org['id'] ?? '';
+        $org_name = $org['name'] ?? '';
+        if ( empty( $org_id ) ) continue;
+
+        $ch_res = batchmate_buffer_graphql_request( $api_key, $ch_query, array( 'organizationId' => $org_id ) );
+        if ( $ch_res['success'] && ! empty( $ch_res['data']['channels'] ) && is_array( $ch_res['data']['channels'] ) ) {
+            foreach ( $ch_res['data']['channels'] as $ch ) {
+                $all_channels[] = array(
+                    'id'       => $ch['id'] ?? '',
+                    'name'     => $ch['name'] ?? '',
+                    'service'  => $ch['service'] ?? '',
+                    'org_name' => $org_name,
+                );
+            }
+        }
+    }
+
+    if ( empty( $all_channels ) ) {
+        wp_send_json_error( 'API Key verified, but no connected social channels were found in Buffer.' );
+    }
+
+    wp_send_json_success( array( 'channels' => $all_channels ) );
+}
+add_action( 'wp_ajax_batchmate_fetch_buffer_channels', 'batchmate_fetch_buffer_channels_ajax' );
+
+/**
+ * AJAX: Send Test Post to Buffer Channels
+ */
+function batchmate_test_buffer_ajax() {
+    if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( $_POST['_wpnonce'], 'BatchMate_settings_nonce' ) ) {
+        wp_send_json_error( 'Security verification failed.', 403 );
+    }
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( 'Permission denied.', 403 );
+    }
+
+    $api_key = sanitize_text_field( trim( $_POST['api_key'] ?? '' ) );
+    if ( empty( $api_key ) ) {
+        $settings = get_option( 'batchmate_settings', array() );
+        $api_key  = trim( (string) ( $settings['buffer_api_key'] ?? '' ) );
+    }
+
+    if ( empty( $api_key ) ) {
+        wp_send_json_error( 'Please enter your Buffer API Key first.' );
+    }
+
+    $override_channels = array();
+    if ( isset( $_POST['buffer_channels'] ) && is_array( $_POST['buffer_channels'] ) ) {
+        foreach ( $_POST['buffer_channels'] as $bc ) {
+            $cid = sanitize_text_field( trim( $bc['channel_id'] ?? '' ) );
+            if ( ! empty( $cid ) ) {
+                $override_channels[] = array(
+                    'status'     => 'on',
+                    'name'       => sanitize_text_field( $bc['name'] ?? '' ),
+                    'channel_id' => $cid,
+                    'mode'       => sanitize_text_field( $bc['mode'] ?? 'shareNow' ),
+                );
+            }
+        }
+    }
+
+    if ( empty( $override_channels ) ) {
+        wp_send_json_error( 'No active Buffer Channel IDs found to test. Please enable at least one channel row.' );
+    }
+
+    $org_name       = function_exists( 'batchmate_org_label' ) ? batchmate_org_label( 'short' ) : 'Royal BatchMate';
+    $sample_payload = array(
+        'type'        => 'test_ping',
+        'event_name'  => 'Buffer Test Post',
+        'member_name' => wp_get_current_user()->display_name,
+        'card_url'    => 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=1200&auto=format&fit=crop&q=80',
+        'message'     => "🎉 Test post from {$org_name} Automation System via Buffer API! #RoyalBatchMate",
+        'timestamp'   => current_time( 'mysql' ),
+    );
+
+    $res = batchmate_dispatch_buffer( $sample_payload, 'test', $api_key, $override_channels );
+
+    if ( empty( $res['dispatched'] ) ) {
+        wp_send_json_error( 'No active Buffer channels were dispatched.' );
+    }
+
+    $msg = 'Dispatched to ' . $res['dispatched'] . ' Buffer channel(s):<br>';
+    foreach ( $res['results'] as $r ) {
+        $badge = $r['success'] ? '<span style="color:#16a34a;font-weight:bold;">[OK]</span>' : '<span style="color:#ef4444;font-weight:bold;">[FAIL]</span>';
+        $msg  .= $badge . ' ' . esc_html( $r['url'] ) . ' (' . esc_html( $r['message'] ?? '' ) . ')<br>';
+    }
+
+    wp_send_json_success( array( 'html' => $msg ) );
+}
+add_action( 'wp_ajax_batchmate_test_buffer', 'batchmate_test_buffer_ajax' );

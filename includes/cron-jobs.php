@@ -49,7 +49,9 @@ function BatchMate_process_birthday_emails() {
     // পোস্ট মেথড ডিটেকশন
     $fb_method     = isset($settings['fb_post_method']) ? $settings['fb_post_method'] : 'none'; // none, access_token, make_com
     $is_fb_enabled = ($fb_method === 'access_token' || $fb_method === 'make_com');
-    $has_webhooks  = !empty($settings['webhook_urls']) || !empty($settings['make_webhook_url']);
+    $has_webhooks  = function_exists('batchmate_has_active_webhooks_or_buffer')
+        ? batchmate_has_active_webhooks_or_buffer($settings)
+        : (!empty($settings['webhook_urls']) || !empty($settings['make_webhook_url']));
 
     if ( ! $email_active && ! $sms_active && ! $is_fb_enabled && ! $has_webhooks ) {
         return;

@@ -74,6 +74,11 @@ jQuery(document).ready(function($) {
         else $('#sms-gateway-fields').slideUp(200);
     });
 
+    $('#buffer_enabled').on('change', function() {
+        if ($(this).is(':checked')) $('#buffer-connections-fields').slideDown(200);
+        else $('#buffer-connections-fields').slideUp(200);
+    });
+
     $('#birthday_active').on('change', function() {
         if ($(this).is(':checked')) $('#birthday-inner-settings').slideDown(200);
         else $('#birthday-inner-settings').slideUp(200);
@@ -282,7 +287,7 @@ jQuery(document).ready(function($) {
                     <input type="text" name="webhook_urls[${idx}][name]" value="" placeholder="e.g. Discord / Zapier" style="width:100%;">
                 </td>
                 <td>
-                    <input type="url" name="webhook_urls[${idx}][url]" value="" placeholder="https://..." style="width:100%;" required>
+                    <input type="url" name="webhook_urls[${idx}][url]" value="" placeholder="https://..." style="width:100%;">
                 </td>
                 <td style="text-align: center;">
                     <button type="button" class="button button-link-delete batchmate-remove-webhook-row" title="Remove Webhook">
@@ -349,6 +354,200 @@ jQuery(document).ready(function($) {
             },
             complete: function() {
                 $btn.prop('disabled', false).html('<span class="dashicons dashicons-rest-api"></span> Test Ping Webhooks');
+            }
+        });
+    });
+
+    /* ══════════════════════════════
+       Buffer Direct Connections
+    ══════════════════════════════ */
+    let bufferNextIndex = $('#batchmate-buffer-rows tr').length;
+
+    function createBufferRowHtml(idx, name, channelId, mode) {
+        const safeName = $('<div>').text(name || '').html();
+        const safeId   = $('<div>').text(channelId || '').html();
+        const selMode  = mode || 'shareNow';
+        return `
+            <tr class="batchmate-buffer-row" data-index="${idx}">
+                <td style="text-align: center;">
+                    <label class="BatchMate-toggle-switch BatchMate-toggle-sm">
+                        <input type="checkbox" name="buffer_channels[${idx}][status]" value="on" checked>
+                        <span class="BatchMate-toggle-slider"></span>
+                    </label>
+                </td>
+                <td>
+                    <input type="text" name="buffer_channels[${idx}][name]" value="${safeName}" placeholder="e.g. Facebook Page" style="width:100%;">
+                </td>
+                <td>
+                    <input type="text" name="buffer_channels[${idx}][channel_id]" value="${safeId}" placeholder="e.g. 67a1b2c3d4e5f6..." style="width:100%; font-family:monospace;">
+                </td>
+                <td>
+                    <select name="buffer_channels[${idx}][mode]" style="width:100%;">
+                        <option value="shareNow" ${selMode === 'shareNow' ? 'selected' : ''}>Publish Now (shareNow)</option>
+                        <option value="addToQueue" ${selMode === 'addToQueue' ? 'selected' : ''}>Add to Queue (addToQueue)</option>
+                        <option value="shareNext" ${selMode === 'shareNext' ? 'selected' : ''}>Share Next (shareNext)</option>
+                    </select>
+                </td>
+                <td style="text-align: center;">
+                    <button type="button" class="button button-link-delete batchmate-remove-buffer-row" title="Remove Channel">
+                        <span class="dashicons dashicons-trash"></span>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }
+
+    function addOrFillBufferChannel(name, channelId) {
+        let alreadyExists = false;
+        $('#batchmate-buffer-rows tr.batchmate-buffer-row').each(function() {
+            const existingId = ($(this).find('input[name$="[channel_id]"]').val() || '').trim();
+            if (existingId && existingId === channelId) {
+                alreadyExists = true;
+            }
+        });
+        if (alreadyExists) {
+            Swal.fire('Already Added', 'This Buffer Channel ID is already in the table.', 'info');
+            return;
+        }
+
+        // Reuse first empty row if available
+        let filledEmpty = false;
+        $('#batchmate-buffer-rows tr.batchmate-buffer-row').each(function() {
+            const $row = $(this);
+            const cid  = ($row.find('input[name$="[channel_id]"]').val() || '').trim();
+            if (!cid && !filledEmpty) {
+                $row.find('input[name$="[name]"]').val(name || '');
+                $row.find('input[name$="[channel_id]"]').val(channelId || '');
+                $row.find('input[type="checkbox"]').prop('checked', true);
+                filledEmpty = true;
+            }
+        });
+
+        if (!filledEmpty) {
+            $('#batchmate-buffer-rows').append(createBufferRowHtml(bufferNextIndex++, name, channelId, 'shareNow'));
+        }
+    }
+
+    $('#batchmate-toggle-buffer-key').on('click', function() {
+        const $inp = $('#buffer_api_key');
+        const isPass = $inp.attr('type') === 'password';
+        $inp.attr('type', isPass ? 'text' : 'password');
+        $(this).find('.dashicons')
+            .toggleClass('dashicons-visibility', !isPass)
+            .toggleClass('dashicons-hidden', isPass);
+    });
+
+    $('#batchmate-add-buffer-channel-btn').on('click', function() {
+        $('#batchmate-buffer-rows').append(createBufferRowHtml(bufferNextIndex++, '', '', 'shareNow'));
+    });
+
+    $(document).on('click', '.batchmate-remove-buffer-row', function() {
+        if ($('#batchmate-buffer-rows tr').length > 1) {
+            $(this).closest('tr').remove();
+        } else {
+            $(this).closest('tr').find('input[type="text"]').val('');
+        }
+    });
+
+    $('#batchmate-fetch-buffer-channels-btn').on('click', function(e) {
+        e.preventDefault();
+        const $btn  = $(this);
+        const $box  = $('#batchmate-buffer-fetched-channels');
+        const apiKey = ($('#buffer_api_key').val() || '').trim();
+
+        if (!apiKey) {
+            Swal.fire('API Key Required', 'Please enter your Buffer API Key first.', 'warning');
+            return;
+        }
+
+        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update BatchMate-spin" style="vertical-align: middle;"></span> Fetching...');
+        $box.hide().empty();
+
+        $.ajax({
+            url: ajax_url,
+            type: 'POST',
+            data: {
+                action: 'batchmate_fetch_buffer_channels',
+                _wpnonce: settings_nonce,
+                api_key: apiKey
+            },
+            success: function(response) {
+                if (response.success && response.data && Array.isArray(response.data.channels)) {
+                    let html = '<div style="font-size:12px; font-weight:600; color:#1e293b; margin-bottom:8px;">Connected Buffer Channels (click to add):</div><div style="display:flex; flex-wrap:wrap; gap:8px;">';
+                    response.data.channels.forEach(function(ch) {
+                        const label = (ch.name || ch.service || 'Channel') + (ch.service ? ' (' + ch.service + ')' : '');
+                        const safeLabel = $('<div>').text(label).html();
+                        const safeId    = $('<div>').text(ch.id).html();
+                        html += `<button type="button" class="button button-small batchmate-pick-buffer-channel" data-name="${safeLabel}" data-id="${safeId}" style="display:inline-flex; align-items:center; gap:4px;">+ ${safeLabel}</button>`;
+                    });
+                    html += '</div>';
+                    $box.html(html).slideDown(150);
+                } else {
+                    Swal.fire('Buffer Fetch Failed', response.data || 'Could not fetch channels.', 'error');
+                }
+            },
+            error: function() {
+                Swal.fire('Error', 'Connection failed while contacting Buffer API.', 'error');
+            },
+            complete: function() {
+                $btn.prop('disabled', false).html('<span class="dashicons dashicons-download" style="vertical-align: middle;"></span> Fetch Channels');
+            }
+        });
+    });
+
+    $(document).on('click', '.batchmate-pick-buffer-channel', function() {
+        addOrFillBufferChannel($(this).data('name'), $(this).data('id'));
+    });
+
+    $('#batchmate-test-buffer-btn').on('click', function(e) {
+        e.preventDefault();
+        const $btn   = $(this);
+        const apiKey = ($('#buffer_api_key').val() || '').trim();
+        const channels = [];
+
+        $('#batchmate-buffer-rows tr.batchmate-buffer-row').each(function() {
+            const $row = $(this);
+            const isChecked = $row.find('input[type="checkbox"]').is(':checked');
+            const cid  = ($row.find('input[name$="[channel_id]"]').val() || '').trim();
+            const name = ($row.find('input[name$="[name]"]').val() || '').trim();
+            const mode = $row.find('select').val() || 'shareNow';
+            if (isChecked && cid) {
+                channels.push({ channel_id: cid, name: name, mode: mode });
+            }
+        });
+
+        if (!apiKey || !channels.length) {
+            Swal.fire('Missing Configuration', 'Please enter your Buffer API Key and at least one active Channel ID.', 'warning');
+            return;
+        }
+
+        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update BatchMate-spin"></span> Sending...');
+
+        $.ajax({
+            url: ajax_url,
+            type: 'POST',
+            data: {
+                action: 'batchmate_test_buffer',
+                _wpnonce: settings_nonce,
+                api_key: apiKey,
+                buffer_channels: channels
+            },
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        title: 'Buffer Test Results',
+                        html: '<div style="text-align:left; font-size:13px; max-height:250px; overflow-y:auto;">' + response.data.html + '</div>',
+                        icon: 'info'
+                    });
+                } else {
+                    Swal.fire('Buffer Test', response.data || 'Failed to send test post to Buffer.', 'warning');
+                }
+            },
+            error: function() {
+                Swal.fire('Error', 'Connection failed while testing Buffer.', 'error');
+            },
+            complete: function() {
+                $btn.prop('disabled', false).html('<span class="dashicons dashicons-share-alt2"></span> Send Test Buffer Post');
             }
         });
     });

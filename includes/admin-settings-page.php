@@ -30,6 +30,9 @@ if ( empty( $webhook_urls ) && ! empty( $settings['make_webhook_url'] ) ) {
         )
     );
 }
+$buffer_enabled  = $settings['buffer_enabled'] ?? 'off';
+$buffer_api_key  = $settings['buffer_api_key'] ?? '';
+$buffer_channels = $settings['buffer_channels'] ?? array();
 
 // SMS Gateway Settings
 $sms_enabled   = $settings['sms_enabled'] ?? 'off';

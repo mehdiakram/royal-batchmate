@@ -131,7 +131,7 @@
                                             <input type="text" name="webhook_urls[<?php echo intval($idx); ?>][name]" value="<?php echo esc_attr($wh_name); ?>" placeholder="e.g. Make.com Facebook" style="width:100%;">
                                         </td>
                                         <td>
-                                            <input type="url" name="webhook_urls[<?php echo intval($idx); ?>][url]" value="<?php echo esc_attr($wh_url); ?>" placeholder="https://hook.us1.make.com/..." style="width:100%;" required>
+                                            <input type="url" name="webhook_urls[<?php echo intval($idx); ?>][url]" value="<?php echo esc_attr($wh_url); ?>" placeholder="https://hook.us1.make.com/..." style="width:100%;">
                                         </td>
                                         <td style="text-align: center;">
                                             <button type="button" class="button button-link-delete batchmate-remove-webhook-row" title="Remove Webhook">
@@ -177,6 +177,140 @@
                                     </button>
                                     <span id="batchmate-webhook-test-result" class="BatchMate-test-result"></span>
                                 </div>
+                            </div>
+                        </div>
+
+                        <hr class="BatchMate-divider">
+
+                        <!-- Dedicated Buffer Direct Connections (GraphQL API) -->
+                        <div class="batchmate-buffer-section">
+                            <div class="BatchMate-toggle-row">
+                                <div class="BatchMate-toggle-info">
+                                    <strong><span class="dashicons dashicons-share-alt2"></span> Buffer Direct Connections (GraphQL API)</strong>
+                                    <p>Post simultaneously to one or more Buffer channels (Facebook, Instagram, LinkedIn, X) alongside the Webhook URLs above.</p>
+                                </div>
+                                <label class="BatchMate-toggle-switch">
+                                    <input type="checkbox" id="buffer_enabled" name="buffer_enabled" value="on" <?php checked('on', $buffer_enabled); ?>>
+                                    <span class="BatchMate-toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div id="buffer-connections-fields" style="<?php echo ($buffer_enabled === 'on') ? '' : 'display:none;'; ?>; margin-top: 16px;">
+                                <div class="BatchMate-field-group BatchMate-field-full" style="margin-bottom: 14px;">
+                                    <label for="buffer_api_key">
+                                        Buffer Personal API Key <span style="color:#ef4444;">*</span>
+                                    </label>
+                                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                        <input type="password" id="buffer_api_key" name="buffer_api_key"
+                                               value="<?php echo esc_attr($buffer_api_key); ?>"
+                                               placeholder="Paste your Buffer API Key from publish.buffer.com/settings/api"
+                                               style="flex: 1; min-width: 260px;">
+                                        <button type="button" id="batchmate-toggle-buffer-key" class="button button-secondary" title="Show/Hide Key">
+                                            <span class="dashicons dashicons-visibility" style="vertical-align: middle;"></span>
+                                        </button>
+                                        <button type="button" id="batchmate-fetch-buffer-channels-btn" class="button button-secondary">
+                                            <span class="dashicons dashicons-download" style="vertical-align: middle;"></span> Fetch Channels
+                                        </button>
+                                    </div>
+                                    <span class="BatchMate-field-hint">
+                                        Endpoint: <code>https://api.buffer.com</code> &mdash; Get your API key from <a href="https://publish.buffer.com/settings/api" target="_blank">Buffer API Settings</a>, then click <strong>Fetch Channels</strong> to auto-load your Channel IDs.
+                                    </span>
+                                    <div id="batchmate-buffer-fetched-channels" style="display:none; margin-top: 10px; padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;"></div>
+                                </div>
+
+                                <table class="batchmate-webhook-table" id="batchmate-buffer-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 70px; text-align: center;">Status</th>
+                                            <th style="width: 200px;">Channel Label</th>
+                                            <th>Buffer Channel ID</th>
+                                            <th style="width: 190px;">Post Mode</th>
+                                            <th style="width: 70px; text-align: center;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="batchmate-buffer-rows">
+                                        <?php
+                                        if ( ! empty( $buffer_channels ) ) :
+                                            foreach ( $buffer_channels as $b_idx => $bc ) :
+                                                $bc_status = $bc['status'] ?? 'on';
+                                                $bc_name   = $bc['name'] ?? '';
+                                                $bc_id     = $bc['channel_id'] ?? '';
+                                                $bc_mode   = $bc['mode'] ?? 'shareNow';
+                                        ?>
+                                        <tr class="batchmate-buffer-row" data-index="<?php echo intval($b_idx); ?>">
+                                            <td style="text-align: center;">
+                                                <label class="BatchMate-toggle-switch BatchMate-toggle-sm">
+                                                    <input type="checkbox" name="buffer_channels[<?php echo intval($b_idx); ?>][status]" value="on" <?php checked('on', $bc_status); ?>>
+                                                    <span class="BatchMate-toggle-slider"></span>
+                                                </label>
+                                            </td>
+                                            <td>
+                                                <input type="text" name="buffer_channels[<?php echo intval($b_idx); ?>][name]" value="<?php echo esc_attr($bc_name); ?>" placeholder="e.g. Facebook Page" style="width:100%;">
+                                            </td>
+                                            <td>
+                                                <input type="text" name="buffer_channels[<?php echo intval($b_idx); ?>][channel_id]" value="<?php echo esc_attr($bc_id); ?>" placeholder="e.g. 67a1b2c3d4e5f6..." style="width:100%; font-family:monospace;">
+                                            </td>
+                                            <td>
+                                                <select name="buffer_channels[<?php echo intval($b_idx); ?>][mode]" style="width:100%;">
+                                                    <option value="shareNow"   <?php selected('shareNow',   $bc_mode); ?>>Publish Now (shareNow)</option>
+                                                    <option value="addToQueue" <?php selected('addToQueue', $bc_mode); ?>>Add to Queue (addToQueue)</option>
+                                                    <option value="shareNext"  <?php selected('shareNext',  $bc_mode); ?>>Share Next (shareNext)</option>
+                                                </select>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <button type="button" class="button button-link-delete batchmate-remove-buffer-row" title="Remove Channel">
+                                                    <span class="dashicons dashicons-trash"></span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <?php
+                                            endforeach;
+                                        else :
+                                        ?>
+                                        <tr class="batchmate-buffer-row" data-index="0">
+                                            <td style="text-align: center;">
+                                                <label class="BatchMate-toggle-switch BatchMate-toggle-sm">
+                                                    <input type="checkbox" name="buffer_channels[0][status]" value="on" checked>
+                                                    <span class="BatchMate-toggle-slider"></span>
+                                                </label>
+                                            </td>
+                                            <td>
+                                                <input type="text" name="buffer_channels[0][name]" value="" placeholder="e.g. Facebook Page" style="width:100%;">
+                                            </td>
+                                            <td>
+                                                <input type="text" name="buffer_channels[0][channel_id]" value="" placeholder="e.g. 67a1b2c3d4e5f6..." style="width:100%; font-family:monospace;">
+                                            </td>
+                                            <td>
+                                                <select name="buffer_channels[0][mode]" style="width:100%;">
+                                                    <option value="shareNow" selected>Publish Now (shareNow)</option>
+                                                    <option value="addToQueue">Add to Queue (addToQueue)</option>
+                                                    <option value="shareNext">Share Next (shareNext)</option>
+                                                </select>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <button type="button" class="button button-link-delete batchmate-remove-buffer-row" title="Remove Channel">
+                                                    <span class="dashicons dashicons-trash"></span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+
+                                <div style="margin-top: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                                    <button type="button" id="batchmate-add-buffer-channel-btn" class="button button-secondary">
+                                        <span class="dashicons dashicons-plus-alt2" style="vertical-align: middle;"></span> Add Buffer Channel
+                                    </button>
+
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <button type="button" id="batchmate-test-buffer-btn" class="BatchMate-test-btn">
+                                            <span class="dashicons dashicons-share-alt2"></span> Send Test Buffer Post
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="BatchMate-field-hint" style="margin-top: 10px;">
+                                    Note: Generated birthday/event cards expire after 24 hours, so <strong>Publish Now (shareNow)</strong> is recommended. Buffer also requires a publicly accessible image URL (live site, not localhost).
+                                </p>
                             </div>
                         </div>
                     </div>
