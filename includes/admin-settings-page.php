@@ -112,7 +112,7 @@ $theme_uri           = ROYAL_BATCHMATE_PLUGIN_URL;
 $template_dir        = $theme_uri . '/templates/';
 $default_preview_url = function_exists( 'batchmate_get_or_generate_card_preview' )
     ? batchmate_get_or_generate_card_preview( $birthday_card_template )
-    : ( $template_dir . str_replace('.php', '_preview.jpg', $birthday_card_template) );
+    : ( $template_dir . str_replace('.php', '_preview.jpg', ( $birthday_card_template === 'random' ? 'birthdaycard1.php' : $birthday_card_template )) );
 
 // Active tab from URL hash (PHP fallback)
 $active_tab = 'organization';

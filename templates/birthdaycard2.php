@@ -57,6 +57,9 @@ foreach ( $confetti as $c ) {
     imageline( $final_image, $c[0], $c[1] - $c[2] * 3, $c[0], $c[1] + $c[2] * 3, $color_gold_lt );
 }
 
+if ( ! function_exists( 'batchmate_gd_draw_text' ) && file_exists( ROYAL_BATCHMATE_PLUGIN_DIR . 'includes/bangla-helper.php' ) ) {
+    require_once ROYAL_BATCHMATE_PLUGIN_DIR . 'includes/bangla-helper.php';
+}
 $font_dir    = ROYAL_BATCHMATE_PLUGIN_DIR . '/assets/fonts/';
 $font_script = file_exists( $font_dir . 'GreatVibes-Regular.ttf' ) ? $font_dir . 'GreatVibes-Regular.ttf' : ( $font_dir . 'Roboto-Bold.ttf' );
 $font_bold   = file_exists( $font_dir . 'PlayfairDisplay-Bold.ttf' ) ? $font_dir . 'PlayfairDisplay-Bold.ttf' : ( $font_dir . 'Montserrat-Bold.ttf' );
@@ -69,25 +72,40 @@ imagettftext( $final_image, 105, 0, 140, 310, $color_gold, $font_script, "Birthd
 imagettftext( $final_image, 22, 0, 85, 380, $color_rose, $font_sans, "BEST WISHES TO OUR DEAR" );
 
 $user_name = ! empty( $user_name ) ? $user_name : 'Dear Batchmate';
-$font_size_name = ( strlen( $user_name ) > 22 ) ? 34 : 46;
+$name_len  = function_exists( 'mb_strlen' ) ? mb_strlen( $user_name, 'UTF-8' ) : strlen( $user_name );
+$font_size_name = ( $name_len > 22 ) ? 34 : 46;
 
 $shadow = imagecolorallocate( $final_image, 15, 2, 7 );
-imagettftext( $final_image, $font_size_name, 0, 87, 462, $shadow, $font_bold, $user_name );
-imagettftext( $final_image, $font_size_name, 0, 85, 460, $color_white, $font_bold, $user_name );
+if ( function_exists( 'batchmate_gd_draw_text' ) ) {
+    batchmate_gd_draw_text( $final_image, $font_size_name, 0, 87, 462, $shadow, $font_bold, $user_name );
+    batchmate_gd_draw_text( $final_image, $font_size_name, 0, 85, 460, $color_white, $font_bold, $user_name );
+} else {
+    imagettftext( $final_image, $font_size_name, 0, 87, 462, $shadow, $font_bold, $user_name );
+    imagettftext( $final_image, $font_size_name, 0, 85, 460, $color_white, $font_bold, $user_name );
+}
 
 $badge_display = '';
 if ( ! empty( $badge_text ) && strtolower( trim( $badge_text ) ) !== 'member' ) {
-    $badge_display = strtoupper( trim( $badge_text ) );
+    $badge_display = mb_strtoupper( trim( $badge_text ), 'UTF-8' );
 } elseif ( ! empty( $program_name ) && strtolower( trim( $program_name ) ) !== 'member' ) {
-    $badge_display = strtoupper( trim( $program_name ) );
+    $badge_display = mb_strtoupper( trim( $program_name ), 'UTF-8' );
 }
 
 if ( ! empty( $badge_display ) ) {
-    $badge_w = min( 520, (int)( strlen( $badge_display ) * 14 + 40 ) );
+    if ( function_exists( 'batchmate_gd_measure_text' ) ) {
+        $bm = batchmate_gd_measure_text( 16, $badge_display, $font_sans );
+        $badge_w = min( 540, max( 120, $bm['w'] + 40 ) );
+    } else {
+        $badge_w = min( 520, (int)( strlen( $badge_display ) * 14 + 40 ) );
+    }
     $badge_bg = imagecolorallocatealpha( $final_image, 159, 18, 57, 50 );
     imagefilledrectangle( $final_image, 85, 495, 85 + $badge_w, 535, $badge_bg );
     imagerectangle( $final_image, 85, 495, 85 + $badge_w, 535, $color_gold );
-    imagettftext( $final_image, 16, 0, 105, 523, $color_gold_lt, $font_sans, $badge_display );
+    if ( function_exists( 'batchmate_gd_draw_text' ) ) {
+        batchmate_gd_draw_text( $final_image, 16, 0, 105, 523, $color_gold_lt, $font_sans, $badge_display );
+    } else {
+        imagettftext( $final_image, 16, 0, 105, 523, $color_gold_lt, $font_sans, $badge_display );
+    }
 }
 
 imagettftext( $final_image, 52, 0, 85, 660, $color_white, $font_script, "Wishing you good health, endless smiles," );
@@ -238,11 +256,18 @@ if ( $logo_src ) {
     imagecopyresampled( $final_image, $logo_src, (int)$pos_x, (int)$pos_y, 0, 0, (int)$new_w, (int)$new_h, $logo_orig_w, $logo_orig_h );
     imagedestroy( $logo_src );
 } else {
-    $bbox = imagettfbbox( 28, 0, $font_bold, $org_name );
-    $tw   = $bbox[2] - $bbox[0];
-    $tx   = $box_x + ( $box_w - $tw ) / 2;
-    $ty   = $box_y + 70;
-    imagettftext( $final_image, 28, 0, (int)$tx, (int)$ty, $color_wine_dk, $font_bold, $org_name );
+    if ( function_exists( 'batchmate_gd_measure_text' ) && function_exists( 'batchmate_gd_draw_text' ) ) {
+        $om = batchmate_gd_measure_text( 28, $org_name, $font_bold );
+        $tx = $box_x + ( $box_w - $om['w'] ) / 2;
+        $ty = $box_y + 70;
+        batchmate_gd_draw_text( $final_image, 28, 0, (int)$tx, (int)$ty, $color_wine_dk, $font_bold, $org_name );
+    } else {
+        $bbox = imagettfbbox( 28, 0, $font_bold, $org_name );
+        $tw   = $bbox[2] - $bbox[0];
+        $tx   = $box_x + ( $box_w - $tw ) / 2;
+        $ty   = $box_y + 70;
+        imagettftext( $final_image, 28, 0, (int)$tx, (int)$ty, $color_wine_dk, $font_bold, $org_name );
+    }
 }
 
 imagejpeg( $final_image, $output_path, 88 );

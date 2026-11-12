@@ -343,6 +343,7 @@ function batchmate_render_test_birthday_page() {
     $first_member = batchmate_get_test_member_data();
 
     $templates = array(
+        'random'            => '🎲 Random (Different Design Each Time)',
         'birthdaycard1.php' => 'Design One — Midnight Royal & Gold (1080x1080)',
         'birthdaycard2.php' => 'Design Two — Crimson & Rose Gold (1080x1080)', 
         'birthdaycard3.php' => 'Design Three — Emerald & Gold (1080x1080)'

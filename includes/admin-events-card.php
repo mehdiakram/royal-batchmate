@@ -15,6 +15,14 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 define( 'BatchMate_FONT_BOLD',    ROYAL_BATCHMATE_PLUGIN_DIR . '/assets/fonts/Montserrat-Bold.ttf' );
 define( 'BatchMate_FONT_REGULAR', ROYAL_BATCHMATE_PLUGIN_DIR . '/assets/fonts/Roboto-Bold.ttf' );
 
+// Load Bengali text helper (Unicode-to-Bijoy converter + font selector)
+if ( ! function_exists( 'batchmate_has_bangla' ) ) {
+    $bangla_helper = ROYAL_BATCHMATE_PLUGIN_DIR . 'includes/bangla-helper.php';
+    if ( file_exists( $bangla_helper ) ) {
+        require_once $bangla_helper;
+    }
+}
+
 /**
  * Generate a registration card image and return the temp file path.
  *
@@ -88,8 +96,12 @@ function BatchMate_generate_event_card( $member, $event, $type = 'Member' ) {
         imagefilledrectangle( $base, 35, 35, 1045, 170, $hdr_bg );
 
         // Event Name in Header
-        $event_title = ! empty( $event['event_name'] ) ? strtoupper( $event['event_name'] ) : 'EVENT ENTRY PASS';
-        imagettftext( $base, 28, 0, 60, 115, $col_gold, $font_bold, $event_title );
+        $event_title = ! empty( $event['event_name'] ) ? mb_strtoupper( (string) $event['event_name'], 'UTF-8' ) : 'EVENT ENTRY PASS';
+        if ( function_exists( 'batchmate_gd_draw_text' ) ) {
+            batchmate_gd_draw_text( $base, 28, 0, 60, 115, $col_gold, $font_bold, $event_title );
+        } else {
+            imagettftext( $base, 28, 0, 60, 115, $col_gold, $font_bold, $event_title );
+        }
         imagettftext( $base, 16, 0, 60, 148, $col_cyan, $font_bold, 'OFFICIAL ATTENDEE ENTRY PASS' );
 
         // Center card background for attendee info
@@ -259,11 +271,22 @@ function BatchMate_generate_event_card( $member, $event, $type = 'Member' ) {
 
         if ( $val !== '' ) {
             $calc_box = function( $sz, $txt ) use ( $font_bold ) {
+                if ( function_exists( 'batchmate_gd_measure_text' ) ) {
+                    return batchmate_gd_measure_text( $sz, $txt, $font_bold );
+                }
                 $b = imagettfbbox( $sz, 0, $font_bold, $txt );
                 return array(
                     'w' => abs( $b[2] - $b[0] ),
                     'h' => abs( $b[1] - $b[7] ),
                 );
+            };
+
+            $draw_text = function( $sz, $tx, $ty, $txt ) use ( $base, $col, $font_bold ) {
+                if ( function_exists( 'batchmate_gd_draw_text' ) ) {
+                    batchmate_gd_draw_text( $base, $sz, 0, (int) $tx, (int) $ty, $col, $font_bold, $txt );
+                } else {
+                    imagettftext( $base, $sz, 0, (int) $tx, (int) $ty, $col, $font_bold, $txt );
+                }
             };
 
             $box = $calc_box( $size, $val );
@@ -272,11 +295,11 @@ function BatchMate_generate_event_card( $member, $event, $type = 'Member' ) {
                 // Fits in single line — strictly left-aligned
                 $tx = intval( $z['x'] );
                 $ty = intval( $z['y'] ) - max( 2, (int)( ( $h - $box['h'] ) / 2 ) );
-                imagettftext( $base, $size, 0, (int)$tx, (int)$ty, $col, $font_bold, $val );
+                $draw_text( $size, $tx, $ty, $val );
             } else {
                 // Wrap into 2 lines
                 $wrap_words = function( $sz, $txt ) use ( $calc_box, $w ) {
-                    $words = preg_split( '/\s+/', $txt );
+                    $words = preg_split( '/\s+/u', $txt );
                     $lines = array();
                     $cur   = '';
                     foreach ( $words as $wd ) {
@@ -307,75 +330,58 @@ function BatchMate_generate_event_card( $member, $event, $type = 'Member' ) {
                 foreach ( $lines as $idx => $line ) {
                     $tx   = intval( $z['x'] ); // strictly left-aligned
                     $ty   = $start_y + ( $idx * $line_h );
-                    imagettftext( $base, $size, 0, (int)$tx, (int)$ty, $col, $font_bold, $line );
+                    $draw_text( $size, $tx, $ty, $line );
                 }
             }
         }
     }
 
+    $draw_zone_line = function( array $z, string $val, string $fallback_font, float $default_size = 26, int $default_h = 36 ) use ( $base ) {
+        if ( $val === '' ) {
+            return;
+        }
+        $col  = BatchMate_hex_to_gd( $base, $z['color_text'] ?? '#ffffff' );
+        $size = floatval( $z['size'] ?? $default_size );
+        $h    = intval( $z['h'] ?? $default_h );
+        if ( function_exists( 'batchmate_gd_measure_text' ) && function_exists( 'batchmate_gd_draw_text' ) ) {
+            $box = batchmate_gd_measure_text( $size, $val, $fallback_font );
+            $ty  = intval( $z['y'] ) - max( 2, (int)( ( $h - $box['h'] ) / 2 ) );
+            batchmate_gd_draw_text( $base, $size, 0, intval( $z['x'] ), (int) $ty, $col, $fallback_font, $val );
+        } else {
+            $bbox = imagettfbbox( $size, 0, $fallback_font, $val );
+            $th   = $bbox[1] - $bbox[7];
+            $ty   = intval( $z['y'] ) - max( 2, (int)( ( $h - $th ) / 2 ) );
+            imagettftext( $base, $size, 0, intval( $z['x'] ), (int) $ty, $col, $fallback_font, $val );
+        }
+    };
+
     // -- Blood Group (optional) --------------------------------------------
     if ( ! empty( $zones['blood'] ) && ( ! isset( $zones['blood']['enabled'] ) || $zones['blood']['enabled'] !== false ) ) {
-        $z    = $zones['blood'];
-        $col  = BatchMate_hex_to_gd( $base, $z['color_text'] ?? '#ffffff' );
-        $size = floatval( $z['size'] ?? 26 );
-        $val  = (string)( $member['blood_group'] ?? 'N/A' );
-        $h    = intval( $z['h'] ?? 36 );
-        $bbox = imagettfbbox( $size, 0, $font_regular, $val );
-        $th   = $bbox[1] - $bbox[7];
-        $ty   = intval( $z['y'] ) - max( 2, (int)( ( $h - $th ) / 2 ) );
-        imagettftext( $base, $size, 0, intval( $z['x'] ), (int)$ty, $col, $font_regular, $val );
+        $draw_zone_line( $zones['blood'], (string)( $member['blood_group'] ?? 'N/A' ), $font_regular, 26, 36 );
     }
 
     // -- District (optional — from member database) ------------------------
     if ( ! empty( $zones['district'] ) && ( ! isset( $zones['district']['enabled'] ) || $zones['district']['enabled'] !== false ) ) {
-        $z    = $zones['district'];
-        $col  = BatchMate_hex_to_gd( $base, $z['color_text'] ?? '#ffffff' );
-        $size = floatval( $z['size'] ?? 26 );
-        $val  = (string)( ! empty( $member['district'] ) ? $member['district']
+        $val = (string)( ! empty( $member['district'] ) ? $member['district']
                 : ( ! empty( $member['present_district'] ) ? $member['present_district']
                 : ( ! empty( $member['permanent_district'] ) ? $member['permanent_district'] : '' ) ) );
-        if ( $val !== '' ) {
-            $h    = intval( $z['h'] ?? 36 );
-            $bbox = imagettfbbox( $size, 0, $font_regular, $val );
-            $th   = $bbox[1] - $bbox[7];
-            $ty   = intval( $z['y'] ) - max( 2, (int)( ( $h - $th ) / 2 ) );
-            imagettftext( $base, $size, 0, intval( $z['x'] ), (int)$ty, $col, $font_regular, $val );
-        }
+        $draw_zone_line( $zones['district'], $val, $font_regular, 26, 36 );
     }
 
     // -- Free Text (optional) ----------------------------------------------
     if ( ! empty( $zones['free_text'] ) && ( ! isset( $zones['free_text']['enabled'] ) || $zones['free_text']['enabled'] !== false ) ) {
-        $z   = $zones['free_text'];
-        $val = isset( $z['text'] ) ? trim( (string) $z['text'] ) : '';
-        if ( $val !== '' ) {
-            $col  = BatchMate_hex_to_gd( $base, $z['color_text'] ?? '#ffffff' );
-            $size = floatval( $z['size'] ?? 26 );
-            $h    = intval( $z['h'] ?? 36 );
-            $bbox = imagettfbbox( $size, 0, $font_bold, $val );
-            $th   = $bbox[1] - $bbox[7];
-            $ty   = intval( $z['y'] ) - max( 2, (int)( ( $h - $th ) / 2 ) );
-            imagettftext( $base, $size, 0, intval( $z['x'] ), (int)$ty, $col, $font_bold, $val );
-        }
+        $val = isset( $zones['free_text']['text'] ) ? trim( (string) $zones['free_text']['text'] ) : '';
+        $draw_zone_line( $zones['free_text'], $val, $font_bold, 26, 36 );
     }
 
     // -- Batch (optional — only if zone.enabled !== false) -----------------
     if ( ! empty( $zones['batch'] ) && ( ! isset( $zones['batch']['enabled'] ) || $zones['batch']['enabled'] !== false ) ) {
-        $z    = $zones['batch'];
-        $col  = BatchMate_hex_to_gd( $base, $z['color_text'] ?? '#ffffff' );
-        $size = floatval( $z['size'] ?? 26 );
-        $val  = (string)( $member['batch'] ?? 'N/A' );
-        $h    = intval( $z['h'] ?? 36 );
-        $bbox = imagettfbbox( $size, 0, $font_regular, $val );
-        $th   = $bbox[1] - $bbox[7];
-        $ty   = intval( $z['y'] ) - max( 2, (int)( ( $h - $th ) / 2 ) );
-        imagettftext( $base, $size, 0, intval( $z['x'] ), (int)$ty, $col, $font_regular, $val );
+        $draw_zone_line( $zones['batch'], (string)( $member['batch'] ?? 'N/A' ), $font_regular, 26, 36 );
     }
 
     // -- Serial Number (with prefix option, e.g. TK or TEST) ----------------
     if ( ! empty( $zones['serial'] ) && ( ! isset( $zones['serial']['enabled'] ) || $zones['serial']['enabled'] !== false ) ) {
         $z          = $zones['serial'];
-        $col        = BatchMate_hex_to_gd( $base, $z['color_text'] ?? '#ffffff' );
-        $size       = floatval( $z['size'] ?? 28 );
         $raw_serial = ! empty( $member['serial_number'] ) ? (string) $member['serial_number']
                     : ( ! empty( $member['serial_no'] ) ? sprintf('%04d', intval($member['serial_no'])) : ( ! empty( $member['id'] ) ? sprintf('%04d', intval($member['id'])) : '0001' ) );
         $prefix     = isset( $z['prefix'] ) ? trim( (string) $z['prefix'] ) : '';
@@ -389,41 +395,16 @@ function BatchMate_generate_event_card( $member, $event, $type = 'Member' ) {
         } else {
             $serial_val = $raw_serial;
         }
-        $h    = intval( $z['h'] ?? 44 );
-        $w    = intval( $z['w'] ?? 200 );
-        $bbox = imagettfbbox( $size, 0, $font_bold, $serial_val );
-        $tw   = $bbox[2] - $bbox[0];
-        $th   = $bbox[1] - $bbox[7];
-        $tx   = intval( $z['x'] ); // strictly left-aligned
-        $ty   = intval( $z['y'] ) - max( 2, (int)( ( $h - $th ) / 2 ) );
-        imagettftext( $base, $size, 0, (int)$tx, (int)$ty, $col, $font_bold, $serial_val );
+        $draw_zone_line( $z, $serial_val, $font_bold, 28, 44 );
     }
 
     // -- Legacy compatibility: Type & Dept for existing cards --------------
     if ( ! empty( $zones['type'] ) && ( ! isset( $zones['type']['enabled'] ) || $zones['type']['enabled'] !== false ) ) {
-        $z    = $zones['type'];
-        $col  = BatchMate_hex_to_gd( $base, $z['color_text'] ?? '#ffffff' );
-        $size = floatval( $z['size'] ?? 26 );
-        $val  = (string)( $type );
-        $h    = intval( $z['h'] ?? 36 );
-        $w    = intval( $z['w'] ?? 150 );
-        $bbox = imagettfbbox( $size, 0, $font_regular, $val );
-        $tw   = $bbox[2] - $bbox[0];
-        $th   = $bbox[1] - $bbox[7];
-        $tx   = intval( $z['x'] ); // strictly left-aligned
-        $ty   = intval( $z['y'] ) - max( 2, (int)( ( $h - $th ) / 2 ) );
-        imagettftext( $base, $size, 0, (int)$tx, (int)$ty, $col, $font_regular, $val );
+        $draw_zone_line( $zones['type'], (string)( $type ), $font_regular, 26, 36 );
     }
     if ( ! empty( $zones['dept'] ) && ( ! isset( $zones['dept']['enabled'] ) || $zones['dept']['enabled'] !== false ) ) {
-        $z    = $zones['dept'];
-        $col  = BatchMate_hex_to_gd( $base, $z['color_text'] ?? '#ffffff' );
-        $size = floatval( $z['size'] ?? 26 );
-        $val  = (string)( ! empty( $member['program_short_code'] ) ? $member['program_short_code'] : ( $member['program_name'] ?? 'N/A' ) );
-        $h    = intval( $z['h'] ?? 36 );
-        $bbox = imagettfbbox( $size, 0, $font_regular, $val );
-        $th   = $bbox[1] - $bbox[7];
-        $ty   = intval( $z['y'] ) - max( 2, (int)( ( $h - $th ) / 2 ) );
-        imagettftext( $base, $size, 0, intval( $z['x'] ), (int)$ty, $col, $font_regular, $val );
+        $val = (string)( ! empty( $member['program_short_code'] ) ? $member['program_short_code'] : ( $member['program_name'] ?? 'N/A' ) );
+        $draw_zone_line( $zones['dept'], $val, $font_regular, 26, 36 );
     }
 
     // -- Organization Logo (from Settings: admin.php?page=batchmate_manage_settings#organization) --

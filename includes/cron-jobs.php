@@ -310,8 +310,23 @@ function BatchMate_generate_custom_card( $member_data, $template_override = null
         $selected_template = str_replace('.jpg', '.php', $saved_template);
     }
     $selected_template = sanitize_file_name( $selected_template );
-    if ( empty( $selected_template ) ) {
-        $selected_template = 'birthdaycard1.php';
+    // Random card design: pick randomly from available templates each time (avoid consecutive repeat)
+    if ( $selected_template === 'random' || empty( $selected_template ) ) {
+        static $last_random_tpl = '';
+        $available_templates = [];
+        $tpl_dir = ROYAL_BATCHMATE_PLUGIN_DIR . 'templates/';
+        foreach ( glob( $tpl_dir . 'birthdaycard*.php' ) as $tpl_file ) {
+            $available_templates[] = basename( $tpl_file );
+        }
+        if ( empty( $available_templates ) ) {
+            $available_templates = [ 'birthdaycard1.php', 'birthdaycard2.php', 'birthdaycard3.php' ];
+        }
+        $pool = $available_templates;
+        if ( count( $pool ) > 1 && $last_random_tpl !== '' ) {
+            $pool = array_values( array_diff( $pool, array( $last_random_tpl ) ) );
+        }
+        $selected_template = $pool[ array_rand( $pool ) ];
+        $last_random_tpl   = $selected_template;
     }
 
     if ( is_array( $member_data ) ) {
@@ -391,7 +406,9 @@ function batchmate_get_or_generate_card_preview( $template_name = 'birthdaycard1
     if ( empty( $template_name ) ) {
         $template_name = 'birthdaycard1.php';
     }
-    $template_name = str_replace( '.jpg', '.php', $template_name );
+    if ( $template_name !== 'random' ) {
+        $template_name = str_replace( '.jpg', '.php', $template_name );
+    }
 
     $upload_dir = wp_upload_dir();
     $basedir    = function_exists( 'trailingslashit' ) ? trailingslashit( $upload_dir['basedir'] ) : ( rtrim( $upload_dir['basedir'], '/\\' ) . '/' );

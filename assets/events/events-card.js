@@ -721,7 +721,7 @@ jQuery(document).ready(function($) {
         ctx.textBaseline = 'middle';
 
         function getLines(sz) {
-            ctx.font = 'bold ' + sz + 'px Montserrat, Arial, sans-serif';
+            ctx.font = 'bold ' + sz + 'px Montserrat, "Hind Siliguri", "Noto Sans Bengali", Kalpurush, Arial, sans-serif';
             var words = text.split(/\s+/);
             var lines = [];
             var cur = '';
@@ -739,7 +739,7 @@ jQuery(document).ready(function($) {
         }
 
         // Test single line first
-        ctx.font = 'bold ' + fontSize + 'px Montserrat, Arial, sans-serif';
+        ctx.font = 'bold ' + fontSize + 'px Montserrat, "Hind Siliguri", "Noto Sans Bengali", Kalpurush, Arial, sans-serif';
         if (ctx.measureText(text).width <= w) {
             ctx.fillText(text, x, y + h / 2);
             return;
@@ -752,7 +752,7 @@ jQuery(document).ready(function($) {
             lines = getLines(fontSize);
         }
 
-        ctx.font = 'bold ' + fontSize + 'px Montserrat, Arial, sans-serif';
+        ctx.font = 'bold ' + fontSize + 'px Montserrat, "Hind Siliguri", "Noto Sans Bengali", Kalpurush, Arial, sans-serif';
         var lineHeight = fontSize * 1.15;
         var totalH = lines.length * lineHeight;
         var startY = (y + h / 2) - (totalH / 2) + (lineHeight / 2);

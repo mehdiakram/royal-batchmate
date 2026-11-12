@@ -2,6 +2,14 @@
 
 All notable changes to the **Royal BatchMate** plugin will be documented in this file.
 
+## [26.11.24] - 2026-11-12
+### Added
+- **Bengali Script Rendering on Generated Cards:** Added a pure-PHP Unicode-to-Bijoy (ANSI) converter (`includes/bangla-helper.php`) paired with `assets/fonts/Kalpurush-ANSI.ttf` so Bengali names, districts, blood groups, event headers, free-text labels, and organization titles render properly without broken conjuncts or tofu boxes on both Event Registration Cards (`includes/admin-events-card.php`) and Birthday Cards (`templates/birthdaycard1.php`, `birthdaycard2.php`, `birthdaycard3.php`), including mixed Bengali/English strings and symbols.
+- **Random Birthday Card Design Option:** Added a `Random (Different Design Each Time)` option to **Select Card Design** (`birthday_card_template`) in Automation Settings (`includes/settings/tabs/tab-automation.php`) and Test Birthday (`includes/testbirthday.php`), picking across installed card templates in `BatchMate_generate_custom_card()` (`includes/cron-jobs.php`) while avoiding back-to-back repeats.
+
+### Improved
+- **Event Card Client Fallback & Bengali Measuring:** Added Bengali web-safe fallback fonts in `assets/events/events-card.js` (`drawFittedName`), and updated Birthday Card font auto-sizing (`mb_strlen`) and badge sizing (`batchmate_gd_measure_text`) to handle multi-byte Bengali strings accurately.
+
 ## [26.11.23] - 2026-11-12
 
 ### Added

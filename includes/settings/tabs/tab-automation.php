@@ -438,6 +438,7 @@
                                     <div class="BatchMate-field-group">
                                         <label for="birthday_card_template" style="font-weight: 600; color: #1e293b;"><?php esc_html_e( 'Select Card Design', 'royal-batchmate' ); ?></label>
                                         <select id="birthday_card_template" name="birthday_card_template" style="width: 100%; max-width: 360px;">
+                                            <option value="random" <?php selected('random', $birthday_card_template); ?>><?php esc_html_e( '🎲 Random (Different design each time)', 'royal-batchmate' ); ?></option>
                                             <option value="birthdaycard1.php" <?php selected('birthdaycard1.php', $birthday_card_template); ?>><?php esc_html_e( 'Birthday Card 1 (Midnight Royal & Gold)', 'royal-batchmate' ); ?></option>
                                             <option value="birthdaycard2.php" <?php selected('birthdaycard2.php', $birthday_card_template); ?>><?php esc_html_e( 'Birthday Card 2 (Crimson & Rose Gold)', 'royal-batchmate' ); ?></option>
                                             <option value="birthdaycard3.php" <?php selected('birthdaycard3.php', $birthday_card_template); ?>><?php esc_html_e( 'Birthday Card 3 (Emerald & Gold)', 'royal-batchmate' ); ?></option>
