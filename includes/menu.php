@@ -3,7 +3,7 @@
 if ( ! defined( "ABSPATH" ) ) exit;
 
 function BatchMate_admin_menu() {
-    $icon_url = file_exists( ROYAL_BATCHMATE_PLUGIN_DIR . 'assets/images/icon-20x20.png' ) 
+    $icon_url = file_exists( ROYAL_BATCHMATE_PLUGIN_DIR . 'assets/images/icon-16x16.png' ) 
         ? ROYAL_BATCHMATE_PLUGIN_URL . 'assets/images/icon-20x20.png' 
         : 'dashicons-groups';
     
