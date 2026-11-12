@@ -57,7 +57,8 @@ function batchmate_member_login_shortcode() {
         $member = $wpdb->get_row( $wpdb->prepare(
             "SELECT m.*, d.dept_name, p.program_name
              FROM {$wpdb->prefix}batchmate_member m
-                          LEFT JOIN {$wpdb->prefix}batchmate_department d ON p.dept_id = d.id
+             LEFT JOIN {$wpdb->prefix}batchmate_program p ON m.program_id = p.id
+             LEFT JOIN {$wpdb->prefix}batchmate_department d ON p.dept_id = d.id
              WHERE m.wp_user_id = %d",
             $user->ID
         ) );

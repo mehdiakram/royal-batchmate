@@ -17,7 +17,7 @@ function BatchMate_get_applications_ajax() {
     $applications = $wpdb->get_results( $wpdb->prepare(
         "SELECT app.id, app.name, app.email, app.cell_number, app.payment_method, app.payment_details, app.status, d.dept_name
          FROM %i app
-         
+         LEFT JOIN %i p ON app.program_id = p.id
          LEFT JOIN %i d ON p.dept_id = d.id
          ORDER BY app.id DESC",
          $app_table, $prog_table, $dept_table

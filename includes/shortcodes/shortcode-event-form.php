@@ -1602,7 +1602,6 @@ function batchmate_event_form_shortcode( $atts ) {
         $(this).next('.select2-container').find('.select2-selection').removeClass('ef-field-error');
         $('#ef-submit-error-banner').slideUp(200);
     });
-    });
 
     // Option 4 render is now handled inside the $.ajax().done() callback above
     // so that _evtOptions and _evtMemberFee are populated before the form renders.

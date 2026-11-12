@@ -2,6 +2,11 @@
 
 All notable changes to the **Royal BatchMate** plugin will be documented in this file.
 
+## [26.11.18] - 2026-11-12
+
+### Fixed
+- **Frontend Event Form Render Crash (SyntaxError: Unexpected token '}'):** Removed an accidental duplicate closing brace in `includes/shortcodes/shortcode-event-form.php` that broke JavaScript execution on page load and caused the frontend registration form not to render. The script now parses cleanly and initializes all form components and Option 4 directly.
+
 ## [26.11.17] - 2026-11-12
 
 ### Fixed

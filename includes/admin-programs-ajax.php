@@ -18,7 +18,8 @@ function BatchMate_get_programs_ajax() {
         "SELECT p.id, p.program_name, p.short_code, p.dept_id, p.is_active, d.dept_name, COUNT(DISTINCT m.id) as member_count
          FROM %i p
          LEFT JOIN %i d ON p.dept_id = d.id
-         LEFT JOIN %i m ON p.id = GROUP BY p.id
+         LEFT JOIN %i m ON p.id = m.program_id
+         GROUP BY p.id
          ORDER BY p.id DESC",
          $program_table, $dept_table, $member_table
     ) );

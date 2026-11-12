@@ -22,7 +22,7 @@ $prog_table = $wpdb->prefix . 'batchmate_program';
 $application = $wpdb->get_row( $wpdb->prepare(
     "SELECT app.*, d.dept_name, p.program_name
      FROM %i app
-     
+     LEFT JOIN %i p ON app.program_id = p.id
      LEFT JOIN %i d ON p.dept_id = d.id
      WHERE app.id = %d",
      $app_table, $prog_table, $dept_table, $app_id
