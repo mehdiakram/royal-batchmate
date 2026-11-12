@@ -2,6 +2,11 @@
 
 All notable changes to the **Royal BatchMate** plugin will be documented in this file.
 
+## [26.11.16] - 2026-11-12
+
+### Fixed
+- **"Failed to save non-member information" Error:** Fixed crash when guests submitted the event registration form. The `batchmate_rawdata` table was missing many columns (`institution`, `board`, `roll_no`, `registration_no`, `edu_group`, `name_bn`, `religion`, `present_district`, `present_country`, `present_upazila`, `permanent_district`, `permanent_country`, `upazila`, `organization`, `industry`, `work_experience`, `previous_organizations`, `about_me`, `skills_json`). Fixed by: (1) adding all missing columns to the CREATE TABLE definition, and (2) auto-migrating them on the live site via `batchmate_ensure_location_columns()` before each guest submission.
+
 ## [26.11.15] - 2026-11-11
 
 ### Fixed

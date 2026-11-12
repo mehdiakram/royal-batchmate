@@ -116,6 +116,7 @@ function batchmate_create_base_tables() {
     $sql = "CREATE TABLE {$wpdb->prefix}batchmate_rawdata (
         id mediumint(9) NOT NULL AUTO_INCREMENT,
         name tinytext NOT NULL,
+        name_bn varchar(255) DEFAULT NULL,
         email varchar(100) NOT NULL,
         cell_number varchar(20),
         cell_show tinyint(1) NOT NULL DEFAULT 1,
@@ -123,11 +124,29 @@ function batchmate_create_base_tables() {
         blood_group varchar(5),
         date_of_birth date,
         gender varchar(10),
+        religion varchar(50) DEFAULT NULL,
         student_id varchar(20),
+        board varchar(100) DEFAULT NULL,
+        roll_no varchar(50) DEFAULT NULL,
+        registration_no varchar(50) DEFAULT NULL,
+        edu_group varchar(50) DEFAULT NULL,
+        institution varchar(255) DEFAULT NULL,
         present_address text,
+        present_country varchar(100) DEFAULT 'Bangladesh',
+        present_district varchar(100) DEFAULT NULL,
+        present_upazila varchar(100) DEFAULT NULL,
         permanent_address text,
+        permanent_district varchar(100) DEFAULT NULL,
+        permanent_country varchar(100) DEFAULT 'Bangladesh',
+        upazila varchar(100) DEFAULT NULL,
         employment_position varchar(100),
+        organization varchar(255) DEFAULT NULL,
+        industry varchar(100) DEFAULT NULL,
+        work_experience varchar(100) DEFAULT NULL,
+        previous_organizations text DEFAULT NULL,
         employment_address text,
+        about_me text DEFAULT NULL,
+        skills_json text DEFAULT NULL,
         facebook_url varchar(255),
         linkedin_url varchar(255),
         x_url varchar(255),
@@ -965,13 +984,67 @@ function batchmate_ensure_location_columns() {
     ];
     foreach ( $tables as $table ) {
         $cols = $wpdb->get_col( "SHOW COLUMNS FROM {$table}" );
-        if ( ! empty( $cols ) ) {
-            if ( ! in_array( 'present_upazila', $cols, true ) ) {
-                $wpdb->query( "ALTER TABLE {$table} ADD COLUMN present_upazila varchar(100) DEFAULT NULL AFTER present_district" );
-            }
-            if ( ! in_array( 'upazila', $cols, true ) ) {
-                $wpdb->query( "ALTER TABLE {$table} ADD COLUMN upazila varchar(100) DEFAULT NULL AFTER permanent_district" );
-            }
+        if ( empty( $cols ) ) continue;
+
+        // present_upazila / upazila (permanent)
+        if ( ! in_array( 'present_upazila', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN present_upazila varchar(100) DEFAULT NULL AFTER present_district" );
+        }
+        if ( ! in_array( 'upazila', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN upazila varchar(100) DEFAULT NULL AFTER permanent_district" );
+        }
+
+        // Columns that may be missing in rawdata and application from older installs
+        if ( ! in_array( 'name_bn', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN name_bn varchar(255) DEFAULT NULL AFTER name" );
+        }
+        if ( ! in_array( 'religion', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN religion varchar(50) DEFAULT NULL AFTER gender" );
+        }
+        if ( ! in_array( 'present_country', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN present_country varchar(100) DEFAULT 'Bangladesh' AFTER present_district" );
+        }
+        if ( ! in_array( 'permanent_country', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN permanent_country varchar(100) DEFAULT 'Bangladesh' AFTER permanent_district" );
+        }
+        if ( ! in_array( 'permanent_district', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN permanent_district varchar(100) DEFAULT NULL AFTER permanent_address" );
+        }
+        if ( ! in_array( 'present_district', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN present_district varchar(100) DEFAULT NULL AFTER present_address" );
+        }
+        if ( ! in_array( 'organization', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN organization varchar(255) DEFAULT NULL AFTER employment_position" );
+        }
+        if ( ! in_array( 'industry', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN industry varchar(100) DEFAULT NULL AFTER organization" );
+        }
+        if ( ! in_array( 'work_experience', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN work_experience varchar(100) DEFAULT NULL AFTER industry" );
+        }
+        if ( ! in_array( 'previous_organizations', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN previous_organizations text DEFAULT NULL AFTER work_experience" );
+        }
+        if ( ! in_array( 'about_me', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN about_me text DEFAULT NULL AFTER employment_address" );
+        }
+        if ( ! in_array( 'skills_json', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN skills_json text DEFAULT NULL AFTER about_me" );
+        }
+        if ( ! in_array( 'board', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN board varchar(100) DEFAULT NULL AFTER student_id" );
+        }
+        if ( ! in_array( 'roll_no', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN roll_no varchar(50) DEFAULT NULL AFTER board" );
+        }
+        if ( ! in_array( 'registration_no', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN registration_no varchar(50) DEFAULT NULL AFTER roll_no" );
+        }
+        if ( ! in_array( 'edu_group', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN edu_group varchar(50) DEFAULT NULL AFTER registration_no" );
+        }
+        if ( ! in_array( 'institution', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN institution varchar(255) DEFAULT NULL AFTER edu_group" );
         }
     }
 }

@@ -473,6 +473,11 @@ function BatchMate_submit_event_application_ajax() {
     }
     global $wpdb;
 
+    // Ensure all required columns exist on rawdata/application tables (migration guard)
+    if ( function_exists( 'batchmate_ensure_location_columns' ) ) {
+        batchmate_ensure_location_columns();
+    }
+
     $event_id        = intval( $_POST['event_id']        ?? 0 );
     $member_id       = intval( $_POST['member_id']       ?? 0 );
     $is_guest        = intval( $_POST['is_guest']        ?? 0 );
