@@ -221,21 +221,23 @@
                                 <table class="batchmate-webhook-table" id="batchmate-buffer-table">
                                     <thead>
                                         <tr>
-                                            <th style="width: 70px; text-align: center;">Status</th>
-                                            <th style="width: 200px;">Channel Label</th>
+                                            <th style="width: 60px; text-align: center;">Status</th>
+                                            <th style="width: 170px;">Channel Label</th>
+                                            <th style="width: 130px;">Platform</th>
                                             <th>Buffer Channel ID</th>
-                                            <th style="width: 190px;">Post Mode</th>
-                                            <th style="width: 70px; text-align: center;">Action</th>
+                                            <th style="width: 175px;">Post Mode</th>
+                                            <th style="width: 60px; text-align: center;">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody id="batchmate-buffer-rows">
                                         <?php
                                         if ( ! empty( $buffer_channels ) ) :
                                             foreach ( $buffer_channels as $b_idx => $bc ) :
-                                                $bc_status = $bc['status'] ?? 'on';
-                                                $bc_name   = $bc['name'] ?? '';
-                                                $bc_id     = $bc['channel_id'] ?? '';
-                                                $bc_mode   = $bc['mode'] ?? 'shareNow';
+                                                $bc_status  = $bc['status'] ?? 'on';
+                                                $bc_name    = $bc['name'] ?? '';
+                                                $bc_service = $bc['service'] ?? 'auto';
+                                                $bc_id      = $bc['channel_id'] ?? '';
+                                                $bc_mode    = $bc['mode'] ?? 'shareNow';
                                         ?>
                                         <tr class="batchmate-buffer-row" data-index="<?php echo intval($b_idx); ?>">
                                             <td style="text-align: center;">
@@ -246,6 +248,18 @@
                                             </td>
                                             <td>
                                                 <input type="text" name="buffer_channels[<?php echo intval($b_idx); ?>][name]" value="<?php echo esc_attr($bc_name); ?>" placeholder="e.g. Facebook Page" style="width:100%;">
+                                            </td>
+                                            <td>
+                                                <select name="buffer_channels[<?php echo intval($b_idx); ?>][service]" style="width:100%;">
+                                                    <option value="auto"      <?php selected('auto',      $bc_service); ?>>Auto-detect</option>
+                                                    <option value="facebook"  <?php selected('facebook',  $bc_service); ?>>Facebook</option>
+                                                    <option value="instagram" <?php selected('instagram', $bc_service); ?>>Instagram</option>
+                                                    <option value="linkedin"  <?php selected('linkedin',  $bc_service); ?>>LinkedIn</option>
+                                                    <option value="twitter"   <?php selected('twitter',   $bc_service); ?>>X / Twitter</option>
+                                                    <option value="threads"   <?php selected('threads',   $bc_service); ?>>Threads</option>
+                                                    <option value="bluesky"   <?php selected('bluesky',   $bc_service); ?>>Bluesky</option>
+                                                    <option value="other"     <?php selected('other',     $bc_service); ?>>Other</option>
+                                                </select>
                                             </td>
                                             <td>
                                                 <input type="text" name="buffer_channels[<?php echo intval($b_idx); ?>][channel_id]" value="<?php echo esc_attr($bc_id); ?>" placeholder="e.g. 67a1b2c3d4e5f6..." style="width:100%; font-family:monospace;">
@@ -276,6 +290,18 @@
                                             </td>
                                             <td>
                                                 <input type="text" name="buffer_channels[0][name]" value="" placeholder="e.g. Facebook Page" style="width:100%;">
+                                            </td>
+                                            <td>
+                                                <select name="buffer_channels[0][service]" style="width:100%;">
+                                                    <option value="auto" selected>Auto-detect</option>
+                                                    <option value="facebook">Facebook</option>
+                                                    <option value="instagram">Instagram</option>
+                                                    <option value="linkedin">LinkedIn</option>
+                                                    <option value="twitter">X / Twitter</option>
+                                                    <option value="threads">Threads</option>
+                                                    <option value="bluesky">Bluesky</option>
+                                                    <option value="other">Other</option>
+                                                </select>
                                             </td>
                                             <td>
                                                 <input type="text" name="buffer_channels[0][channel_id]" value="" placeholder="e.g. 67a1b2c3d4e5f6..." style="width:100%; font-family:monospace;">
@@ -760,67 +786,4 @@
 
             </div><!-- /#automation-inner-settings -->
 
-
-
-
-
-<div class="BatchMate-settings-card">
-                <div class="BatchMate-card-head">
-                    <span class="dashicons dashicons-admin-appearance"></span>
-                    <h3>Customize Front-End Labels</h3>
-                </div>
-                <div class="BatchMate-card-body">
-                    <p style="margin-bottom: 20px; color: #50575e;">Change these labels to adapt the plugin for different types of organizations (e.g. Alumni, Members, Students).</p>
-                    
-                    <div class="BatchMate-field-grid">
-                        <div class="BatchMate-field-group">
-                            <label for="label_batchmate">"Batchmate" (Singular)</label>
-                            <input type="text" id="label_batchmate" name="label_batchmate"
-                                   value="<?php echo esc_attr($label_batchmate); ?>"
-                                   placeholder="e.g. Batchmate, Alumni, Student">
-                        </div>
-                        <div class="BatchMate-field-group">
-                            <label for="label_batchmates">"Batchmates" (Plural)</label>
-                            <input type="text" id="label_batchmates" name="label_batchmates"
-                                   value="<?php echo esc_attr($label_batchmates); ?>"
-                                   placeholder="e.g. Batchmates, Alumni, Students">
-                        </div>
-                        <div class="BatchMate-field-group">
-                            <label for="label_member">"Member" (Singular)</label>
-                            <input type="text" id="label_member" name="label_member"
-                                   value="<?php echo esc_attr($label_member); ?>"
-                                   placeholder="e.g. Member, User">
-                        </div>
-                        <div class="BatchMate-field-group">
-                            <label for="label_members">"Members" (Plural)</label>
-                            <input type="text" id="label_members" name="label_members"
-                                   value="<?php echo esc_attr($label_members); ?>"
-                                   placeholder="e.g. Members, Users">
-                        </div>
-                        <div class="BatchMate-field-group">
-                            <label for="label_main_menu">Main Menu Name</label>
-                            <input type="text" id="label_main_menu" name="label_main_menu"
-                                   value="<?php echo esc_attr($label_main_menu); ?>"
-                                   placeholder="e.g. BatchMate">
-                        </div>
-                        <div class="BatchMate-field-group">
-                            <label for="label_settings_menu">Settings Menu Name</label>
-                            <input type="text" id="label_settings_menu" name="label_settings_menu"
-                                   value="<?php echo esc_attr($label_settings_menu); ?>"
-                                   placeholder="e.g. Settings">
-                        </div>
-                        <div class="BatchMate-field-group" style="grid-column: 1 / -1;">
-                            <label for="label_settings_page_title">Settings Page Header Title</label>
-                            <input type="text" id="label_settings_page_title" name="label_settings_page_title"
-                                   value="<?php echo esc_attr($label_settings_page_title); ?>"
-                                   placeholder="e.g. BatchMate Settings">
-                        </div>
-                    </div>
-                
-        </div>
-            </div>
         </div><!-- /#tab-automation -->
-
-<!-- 
-             TAB: Breadcrumb
-        -->

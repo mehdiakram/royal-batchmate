@@ -75,6 +75,7 @@
 /* ── Tab Navigation ── */
 .BatchMate-tab-nav {
     display: flex;
+    flex-wrap: wrap;
     gap: 6px;
     background: #fff;
     border: 1px solid #e2e8f0;

@@ -22,7 +22,7 @@ jQuery(document).ready(function($) {
         switchTab($(this).data('tab'));
     });
     const urlHash = window.location.hash.replace('#', '') || localStorage.getItem('batchmate_active_tab');
-    switchTab(urlHash && ['organization','breadcrumb','registration','automation','license','about'].includes(urlHash) ? urlHash : 'organization');
+    switchTab(urlHash && ['organization','breadcrumb','registration','labels','automation','license','about'].includes(urlHash) ? urlHash : 'organization');
 
     /* ── Instant Field Search Filter in Registration Tab ── */
     $('#bm-field-search').on('input', function() {
@@ -363,10 +363,24 @@ jQuery(document).ready(function($) {
     ══════════════════════════════ */
     let bufferNextIndex = $('#batchmate-buffer-rows tr').length;
 
-    function createBufferRowHtml(idx, name, channelId, mode) {
+    function createBufferRowHtml(idx, name, channelId, mode, service) {
         const safeName = $('<div>').text(name || '').html();
         const safeId   = $('<div>').text(channelId || '').html();
         const selMode  = mode || 'shareNow';
+        const svc      = (service || 'auto').toLowerCase();
+        const svcOpts  = [
+            ['auto', 'Auto-detect'],
+            ['facebook', 'Facebook'],
+            ['instagram', 'Instagram'],
+            ['linkedin', 'LinkedIn'],
+            ['twitter', 'X / Twitter'],
+            ['threads', 'Threads'],
+            ['bluesky', 'Bluesky'],
+            ['other', 'Other']
+        ].map(function(pair) {
+            return `<option value="${pair[0]}" ${svc === pair[0] ? 'selected' : ''}>${pair[1]}</option>`;
+        }).join('');
+
         return `
             <tr class="batchmate-buffer-row" data-index="${idx}">
                 <td style="text-align: center;">
@@ -377,6 +391,11 @@ jQuery(document).ready(function($) {
                 </td>
                 <td>
                     <input type="text" name="buffer_channels[${idx}][name]" value="${safeName}" placeholder="e.g. Facebook Page" style="width:100%;">
+                </td>
+                <td>
+                    <select name="buffer_channels[${idx}][service]" style="width:100%;">
+                        ${svcOpts}
+                    </select>
                 </td>
                 <td>
                     <input type="text" name="buffer_channels[${idx}][channel_id]" value="${safeId}" placeholder="e.g. 67a1b2c3d4e5f6..." style="width:100%; font-family:monospace;">
@@ -397,7 +416,7 @@ jQuery(document).ready(function($) {
         `;
     }
 
-    function addOrFillBufferChannel(name, channelId) {
+    function addOrFillBufferChannel(name, channelId, service) {
         let alreadyExists = false;
         $('#batchmate-buffer-rows tr.batchmate-buffer-row').each(function() {
             const existingId = ($(this).find('input[name$="[channel_id]"]').val() || '').trim();
@@ -410,6 +429,10 @@ jQuery(document).ready(function($) {
             return;
         }
 
+        const normSvc = (service || 'auto').toLowerCase();
+        const allowedSvcs = ['auto', 'facebook', 'instagram', 'linkedin', 'twitter', 'threads', 'bluesky', 'other'];
+        const finalSvc = allowedSvcs.includes(normSvc) ? normSvc : 'other';
+
         // Reuse first empty row if available
         let filledEmpty = false;
         $('#batchmate-buffer-rows tr.batchmate-buffer-row').each(function() {
@@ -417,6 +440,7 @@ jQuery(document).ready(function($) {
             const cid  = ($row.find('input[name$="[channel_id]"]').val() || '').trim();
             if (!cid && !filledEmpty) {
                 $row.find('input[name$="[name]"]').val(name || '');
+                $row.find('select[name$="[service]"]').val(finalSvc);
                 $row.find('input[name$="[channel_id]"]').val(channelId || '');
                 $row.find('input[type="checkbox"]').prop('checked', true);
                 filledEmpty = true;
@@ -424,7 +448,7 @@ jQuery(document).ready(function($) {
         });
 
         if (!filledEmpty) {
-            $('#batchmate-buffer-rows').append(createBufferRowHtml(bufferNextIndex++, name, channelId, 'shareNow'));
+            $('#batchmate-buffer-rows').append(createBufferRowHtml(bufferNextIndex++, name, channelId, 'shareNow', finalSvc));
         }
     }
 
@@ -438,7 +462,7 @@ jQuery(document).ready(function($) {
     });
 
     $('#batchmate-add-buffer-channel-btn').on('click', function() {
-        $('#batchmate-buffer-rows').append(createBufferRowHtml(bufferNextIndex++, '', '', 'shareNow'));
+        $('#batchmate-buffer-rows').append(createBufferRowHtml(bufferNextIndex++, '', '', 'shareNow', 'auto'));
     });
 
     $(document).on('click', '.batchmate-remove-buffer-row', function() {
@@ -446,6 +470,7 @@ jQuery(document).ready(function($) {
             $(this).closest('tr').remove();
         } else {
             $(this).closest('tr').find('input[type="text"]').val('');
+            $(this).closest('tr').find('select[name$="[service]"]').val('auto');
         }
     });
 
@@ -476,9 +501,10 @@ jQuery(document).ready(function($) {
                     let html = '<div style="font-size:12px; font-weight:600; color:#1e293b; margin-bottom:8px;">Connected Buffer Channels (click to add):</div><div style="display:flex; flex-wrap:wrap; gap:8px;">';
                     response.data.channels.forEach(function(ch) {
                         const label = (ch.name || ch.service || 'Channel') + (ch.service ? ' (' + ch.service + ')' : '');
-                        const safeLabel = $('<div>').text(label).html();
-                        const safeId    = $('<div>').text(ch.id).html();
-                        html += `<button type="button" class="button button-small batchmate-pick-buffer-channel" data-name="${safeLabel}" data-id="${safeId}" style="display:inline-flex; align-items:center; gap:4px;">+ ${safeLabel}</button>`;
+                        const safeLabel   = $('<div>').text(label).html();
+                        const safeId      = $('<div>').text(ch.id).html();
+                        const safeService = $('<div>').text(ch.service || 'auto').html();
+                        html += `<button type="button" class="button button-small batchmate-pick-buffer-channel" data-name="${safeLabel}" data-id="${safeId}" data-service="${safeService}" style="display:inline-flex; align-items:center; gap:4px;">+ ${safeLabel}</button>`;
                     });
                     html += '</div>';
                     $box.html(html).slideDown(150);
@@ -496,7 +522,7 @@ jQuery(document).ready(function($) {
     });
 
     $(document).on('click', '.batchmate-pick-buffer-channel', function() {
-        addOrFillBufferChannel($(this).data('name'), $(this).data('id'));
+        addOrFillBufferChannel($(this).data('name'), $(this).data('id'), $(this).data('service'));
     });
 
     $('#batchmate-test-buffer-btn').on('click', function(e) {
@@ -508,11 +534,12 @@ jQuery(document).ready(function($) {
         $('#batchmate-buffer-rows tr.batchmate-buffer-row').each(function() {
             const $row = $(this);
             const isChecked = $row.find('input[type="checkbox"]').is(':checked');
-            const cid  = ($row.find('input[name$="[channel_id]"]').val() || '').trim();
-            const name = ($row.find('input[name$="[name]"]').val() || '').trim();
-            const mode = $row.find('select').val() || 'shareNow';
+            const cid     = ($row.find('input[name$="[channel_id]"]').val() || '').trim();
+            const name    = ($row.find('input[name$="[name]"]').val() || '').trim();
+            const service = $row.find('select[name$="[service]"]').val() || 'auto';
+            const mode    = $row.find('select[name$="[mode]"]').val() || 'shareNow';
             if (isChecked && cid) {
-                channels.push({ channel_id: cid, name: name, mode: mode });
+                channels.push({ channel_id: cid, name: name, service: service, mode: mode });
             }
         });
 

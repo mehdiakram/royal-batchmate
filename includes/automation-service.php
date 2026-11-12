@@ -311,6 +311,44 @@ function batchmate_build_buffer_post_text( $payload, $event_type = 'general' ) {
 }
 
 /**
+ * Resolve Buffer channel service (facebook, instagram, linkedin, twitter, etc.)
+ * Uses saved service value, transient cache, or live GraphQL lookup as fallback.
+ *
+ * @param string $api_key
+ * @param string $channel_id
+ * @param string $saved_service
+ * @return string
+ */
+function batchmate_resolve_buffer_channel_service( $api_key, $channel_id, $saved_service = '' ) {
+    $saved_service = strtolower( trim( (string) $saved_service ) );
+    if ( ! empty( $saved_service ) && $saved_service !== 'auto' ) {
+        return $saved_service;
+    }
+
+    $cache_key = 'batchmate_buf_svc_' . md5( $channel_id );
+    $cached    = get_transient( $cache_key );
+    if ( is_string( $cached ) && $cached !== '' ) {
+        return $cached;
+    }
+
+    $query = 'query GetChannel($id: ChannelId!) {
+        channel(input: { id: $id }) {
+            id
+            service
+        }
+    }';
+
+    $res = batchmate_buffer_graphql_request( $api_key, $query, array( 'id' => $channel_id ) );
+    if ( $res['success'] && ! empty( $res['data']['channel']['service'] ) ) {
+        $detected = strtolower( trim( (string) $res['data']['channel']['service'] ) );
+        set_transient( $cache_key, $detected, DAY_IN_SECONDS );
+        return $detected;
+    }
+
+    return '';
+}
+
+/**
  * Dispatch post(s) to configured Buffer channels via GraphQL createPost mutation
  *
  * @param array       $payload
@@ -360,6 +398,7 @@ function batchmate_dispatch_buffer( $payload, $event_type = 'general', $override
         $channel_id = trim( (string) ( $ch['channel_id'] ?? '' ) );
         $label      = trim( (string) ( $ch['name'] ?? '' ) );
         $mode       = trim( (string) ( $ch['mode'] ?? 'shareNow' ) );
+        $service    = batchmate_resolve_buffer_channel_service( $api_key, $channel_id, $ch['service'] ?? '' );
 
         if ( $status !== 'on' || empty( $channel_id ) ) {
             continue;
@@ -375,6 +414,21 @@ function batchmate_dispatch_buffer( $payload, $event_type = 'general', $override
             'schedulingType' => 'automatic',
             'mode'           => $mode,
         );
+
+        if ( $service === 'facebook' ) {
+            $input['metadata'] = array(
+                'facebook' => array(
+                    'type' => 'post',
+                ),
+            );
+        } elseif ( $service === 'instagram' ) {
+            $input['metadata'] = array(
+                'instagram' => array(
+                    'type'              => 'post',
+                    'shouldShareToFeed' => true,
+                ),
+            );
+        }
 
         if ( $has_image ) {
             $input['assets'] = array(
@@ -820,6 +874,7 @@ function batchmate_test_buffer_ajax() {
                 $override_channels[] = array(
                     'status'     => 'on',
                     'name'       => sanitize_text_field( $bc['name'] ?? '' ),
+                    'service'    => sanitize_text_field( $bc['service'] ?? 'auto' ),
                     'channel_id' => $cid,
                     'mode'       => sanitize_text_field( $bc['mode'] ?? 'shareNow' ),
                 );

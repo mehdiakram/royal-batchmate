@@ -81,14 +81,17 @@ function batchmate_save_settings_ajax() {
     $new_settings['buffer_api_key']  = sanitize_text_field( trim( $_POST['buffer_api_key'] ?? '' ) );
     $new_settings['buffer_channels'] = array();
     if ( isset( $_POST['buffer_channels'] ) && is_array( $_POST['buffer_channels'] ) ) {
-        $allowed_modes = array( 'shareNow', 'addToQueue', 'shareNext' );
+        $allowed_modes    = array( 'shareNow', 'addToQueue', 'shareNext' );
+        $allowed_services = array( 'auto', 'facebook', 'instagram', 'linkedin', 'twitter', 'threads', 'bluesky', 'other' );
         foreach ( $_POST['buffer_channels'] as $bc ) {
             $channel_id = sanitize_text_field( trim( $bc['channel_id'] ?? '' ) );
             if ( ! empty( $channel_id ) ) {
-                $mode = sanitize_text_field( $bc['mode'] ?? 'shareNow' );
+                $mode    = sanitize_text_field( $bc['mode'] ?? 'shareNow' );
+                $service = strtolower( sanitize_text_field( $bc['service'] ?? 'auto' ) );
                 $new_settings['buffer_channels'][] = array(
                     'status'     => isset( $bc['status'] ) && $bc['status'] === 'on' ? 'on' : 'off',
                     'name'       => sanitize_text_field( $bc['name'] ?? '' ),
+                    'service'    => in_array( $service, $allowed_services, true ) ? $service : 'auto',
                     'channel_id' => $channel_id,
                     'mode'       => in_array( $mode, $allowed_modes, true ) ? $mode : 'shareNow',
                 );
@@ -142,7 +145,7 @@ function batchmate_save_settings_ajax() {
     $new_settings['fb_access_token'] = sanitize_textarea_field( $_POST['fb_access_token'] ?? '' );
 
     // Fields Configuration
-    if ( isset($_POST['fields']) || (isset($_POST['current_tab']) && $_POST['current_tab'] === 'registration') || isset($_POST['label_institution']) ) {
+    if ( isset($_POST['fields']) || (isset($_POST['current_tab']) && in_array($_POST['current_tab'], array('registration', 'labels'), true)) || isset($_POST['label_institution']) ) {
         $submitted_fields = ( isset($_POST['fields']) && is_array($_POST['fields']) ) ? wp_unslash($_POST['fields']) : array();
 
         // Explicit primary field labels

@@ -138,27 +138,31 @@ $active_tab = 'organization';
 
     <!-- ── Tab Navigation ── -->
     <div class="BatchMate-tab-nav">
-        <button class="BatchMate-tab-btn BatchMate-tab-active" data-tab="organization">
+        <button type="button" class="BatchMate-tab-btn BatchMate-tab-active" data-tab="organization">
             <span class="dashicons dashicons-building"></span>
             Organization
         </button>
-        <button class="BatchMate-tab-btn" data-tab="breadcrumb">
+        <button type="button" class="BatchMate-tab-btn" data-tab="breadcrumb">
             <span class="dashicons dashicons-layout"></span>
             Breadcrumb
         </button>
-        <button class="BatchMate-tab-btn" data-tab="registration">
+        <button type="button" class="BatchMate-tab-btn" data-tab="registration">
             <span class="dashicons dashicons-clipboard"></span>
             Registration
         </button>
-        <button class="BatchMate-tab-btn" data-tab="automation">
+        <button type="button" class="BatchMate-tab-btn" data-tab="labels">
+            <span class="dashicons dashicons-tag"></span>
+            Labels &amp; Fields
+        </button>
+        <button type="button" class="BatchMate-tab-btn" data-tab="automation">
             <span class="dashicons dashicons-admin-generic"></span>
             Automation
         </button>
-        <button class="BatchMate-tab-btn" data-tab="license">
+        <button type="button" class="BatchMate-tab-btn" data-tab="license">
             <span class="dashicons dashicons-lock"></span>
             License
         </button>
-        <button class="BatchMate-tab-btn" data-tab="about">
+        <button type="button" class="BatchMate-tab-btn" data-tab="about">
             <span class="dashicons dashicons-info"></span>
             About
         </button>
@@ -177,11 +181,13 @@ $active_tab = 'organization';
     $settings_dir = plugin_dir_path( __FILE__ ) . 'settings/';
     include_once $settings_dir . 'tabs/tab-organization.php';
     include_once $settings_dir . 'tabs/tab-registration.php';
+    include_once $settings_dir . 'tabs/tab-labels.php';
     include_once $settings_dir . 'tabs/tab-automation.php';
     include_once $settings_dir . 'tabs/tab-breadcrumb.php';
     include_once $settings_dir . 'tabs/tab-license.php';
     include_once $settings_dir . 'tabs/tab-about.php';
     ?>
+    </form>
 
 </div><!-- /.BatchMate-settings-wrap -->
 
