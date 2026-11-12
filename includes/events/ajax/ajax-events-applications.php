@@ -595,15 +595,16 @@ function BatchMate_submit_event_application_ajax() {
 
         // Insert into rawdata
         $rawdata_arr = array(
-            'name'        => $g_name,
-            'student_id'  => $g_roll ?: '',
-            'email'       => $g_email,
-            'cell_number' => $g_cell,
-            'blood_group' => $g_blood,
-            'photo_url'   => $photo_url,
-            'gender'      => $g_gender,
-            'institution' => $g_inst,
-            'status'      => $event->event_name,
+            'name'            => $g_name,
+            'student_id'      => $g_roll ?: '',
+            'email'           => $g_email,
+            'cell_number'     => $g_cell,
+            'blood_group'     => $g_blood,
+            'photo_url'       => $photo_url,
+            'gender'          => $g_gender,
+            'institution'     => $g_inst,
+            'status'          => 'pending',
+            'submission_date' => current_time( 'mysql' ),
         );
         if ( ! empty( $g_board ) )     $rawdata_arr['board'] = $g_board;
         if ( ! empty( $g_roll ) )      $rawdata_arr['roll_no'] = $g_roll;
@@ -634,9 +635,17 @@ function BatchMate_submit_event_application_ajax() {
         if ( ! empty( $g_x ) )         $rawdata_arr['x_url'] = $g_x;
         if ( ! empty( $g_web ) )       $rawdata_arr['website'] = $g_web;
 
+        // Defensive column filtering: ensure we only insert columns that actually exist in the DB table
+        $existing_raw_cols = $wpdb->get_col( "SHOW COLUMNS FROM {$wpdb->prefix}batchmate_rawdata" );
+        if ( ! empty( $existing_raw_cols ) ) {
+            $rawdata_arr = array_intersect_key( $rawdata_arr, array_flip( $existing_raw_cols ) );
+        }
+
         $result = $wpdb->insert( $wpdb->prefix . 'batchmate_rawdata', $rawdata_arr );
 
-        if ( $result === false ) wp_send_json_error('Failed to save non-member information.');
+        if ( $result === false ) {
+            wp_send_json_error( 'Failed to save non-member information: ' . ( $wpdb->last_error ?: 'Database insert error' ) );
+        }
         $rawdata_id = $wpdb->insert_id;
         $member_id = 0;
     }

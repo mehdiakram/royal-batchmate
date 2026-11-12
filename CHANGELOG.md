@@ -2,6 +2,14 @@
 
 All notable changes to the **Royal BatchMate** plugin will be documented in this file.
 
+## [26.11.17] - 2026-11-12
+
+### Fixed
+- **Form Submission Failure ("Failed to save non-member information"):** Solved root cause where long event names (e.g. `99 Friends Reunion, Tangail-2026` = 32 chars) exceeded the `status varchar(20)` column in `batchmate_rawdata`. Expanded column to `varchar(100)`, set status to `'pending'`, added current MySQL `submission_date` timestamp, and dynamically filtered insert payloads against existing table columns.
+- **Select2 District & Upazila Dropdown Search:** Enqueued Select2 in `<head>` (`$in_footer = false`) for frontend and Elementor widgets with multi-pass initialization (`initSelect2Dropdowns`) and cascading triggers, enabling responsive live search for 64 districts and upazilas.
+- **Form Validation Popup & Red Field Highlighting:** Enqueued SweetAlert2 on the frontend and enhanced submission validation. If any required `*` field is missing, a popup lists all missing fields, highlights invalid inputs in red, and smoothly scrolls/focuses the first missing field.
+- **Preserve Form Inputs on Error:** If a server or database error occurs during submission, the form is no longer wiped out — all entered information remains intact with an error banner and popup.
+
 ## [26.11.16] - 2026-11-12
 
 ### Fixed

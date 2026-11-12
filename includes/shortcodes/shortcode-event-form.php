@@ -118,6 +118,12 @@ function batchmate_event_form_shortcode( $atts ) {
     $reg_link = home_url( '/registration-form/' );
     $no_photo = ROYAL_BATCHMATE_PLUGIN_URL . '/assets/images/noprofile.png';
 
+    // Enqueue dependencies for event registration (Select2 for district/upazila, SweetAlert2 for validation popups)
+    wp_enqueue_style( 'select2-css' );
+    wp_enqueue_script( 'select2-js' );
+    wp_enqueue_style( 'sweetalert2-css' );
+    wp_enqueue_script( 'sweetalert2-js' );
+
     ob_start();
     ?>
 <div class="BatchMate-ef-wrap" id="BatchMate-ef-wrap-<?php echo $event_id; ?>">
@@ -316,21 +322,69 @@ function batchmate_event_form_shortcode( $atts ) {
     opacity: 0.85 !important;
     font-weight: 400 !important;
 }
+.BatchMate-ef-wrap .select2-container {
+    width: 100% !important;
+    display: block !important;
+}
 .BatchMate-ef-wrap .select2-container .select2-selection--single {
     height: 42px !important;
     border: 1.5px solid #cbd5e1 !important;
     border-radius: 8px !important;
     display: flex !important;
     align-items: center !important;
+    background-color: #fff !important;
+    box-sizing: border-box !important;
+    transition: all .2s ease !important;
+}
+.BatchMate-ef-wrap .select2-container--default.select2-container--open .select2-selection--single,
+.BatchMate-ef-wrap .select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
 }
 .BatchMate-ef-wrap .select2-container--default .select2-selection--single .select2-selection__rendered {
     line-height: 40px !important;
     padding-left: 12px !important;
+    padding-right: 30px !important;
     color: #0f172a !important;
+    font-size: 13.5px !important;
 }
 .BatchMate-ef-wrap .select2-container--default .select2-selection--single .select2-selection__arrow {
     height: 40px !important;
     right: 8px !important;
+    width: 24px !important;
+}
+.select2-dropdown {
+    z-index: 9999999 !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15) !important;
+}
+.select2-search--dropdown {
+    padding: 8px !important;
+}
+.select2-search--dropdown .select2-search__field {
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    padding: 7px 10px !important;
+    font-size: 13.5px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+.select2-results__option {
+    padding: 8px 12px !important;
+    font-size: 13.5px !important;
+}
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+}
+/* Error state on required fields */
+.BatchMate-ef-wrap .ef-field-error,
+.BatchMate-ef-wrap .select2-container .select2-selection.ef-field-error {
+    border-color: #ef4444 !important;
+    background-color: #fef2f2 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
 }
 </style>
 
@@ -974,10 +1028,23 @@ function batchmate_event_form_shortcode( $atts ) {
             submitBtnText + '</button></div>' +
             '</div></div>');
 
-        // Init select2 on event form
-        if ($.fn.select2) {
-            $result.find('.ef-select2').select2({ width: '100%' });
+        // Robust Init select2 on event form (multi-pass to handle Elementor & asynchronous script loads)
+        function initSelect2Dropdowns() {
+            if (typeof $.fn.select2 !== 'undefined') {
+                $result.find('.ef-select2').each(function() {
+                    var $s = $(this);
+                    if (!$s.hasClass('select2-hidden-accessible')) {
+                        $s.select2({
+                            width: '100%',
+                            dropdownAutoWidth: true
+                        });
+                    }
+                });
+            }
         }
+        initSelect2Dropdowns();
+        setTimeout(initSelect2Dropdowns, 100);
+        setTimeout(initSelect2Dropdowns, 400);
 
         // Cascading District -> Upazila
         $result.off('change.presDist').on('change.presDist', '#ef-guest-pres-dist', function(){
@@ -987,8 +1054,11 @@ function batchmate_event_form_shortcode( $atts ) {
             upzList.forEach(function(u){
                 opts += '<option value="' + u + '">' + u + '</option>';
             });
-            $('#ef-guest-pres-upazila').html(opts);
-            if ($.fn.select2) $('#ef-guest-pres-upazila').trigger('change.select2');
+            var $upz = $('#ef-guest-pres-upazila');
+            $upz.html(opts);
+            if (typeof $.fn.select2 !== 'undefined') {
+                $upz.trigger('change');
+            }
         });
 
         $result.off('change.permDist').on('change.permDist', '#ef-guest-perm-dist', function(){
@@ -998,24 +1068,33 @@ function batchmate_event_form_shortcode( $atts ) {
             upzList.forEach(function(u){
                 opts += '<option value="' + u + '">' + u + '</option>';
             });
-            $('#ef-guest-perm-upazila').html(opts);
-            if ($.fn.select2) $('#ef-guest-perm-upazila').trigger('change.select2');
+            var $upz2 = $('#ef-guest-perm-upazila');
+            $upz2.html(opts);
+            if (typeof $.fn.select2 !== 'undefined') {
+                $upz2.trigger('change');
+            }
         });
 
         // Country toggle District & Upazila
         $result.off('change.presCountry').on('change.presCountry', '#ef-guest-pres-country', function(){
             var isBD = $(this).val() === 'Bangladesh';
             $('#wrap-ef-guest-pres-dist, #wrap-ef-guest-pres-upazila').toggle(isBD);
-            if (!isBD && $.fn.select2) {
-                $('#ef-guest-pres-dist, #ef-guest-pres-upazila').val('').trigger('change.select2');
+            if (!isBD) {
+                $('#ef-guest-pres-dist, #ef-guest-pres-upazila').val('');
+                if (typeof $.fn.select2 !== 'undefined') {
+                    $('#ef-guest-pres-dist, #ef-guest-pres-upazila').trigger('change');
+                }
             }
         });
 
         $result.off('change.permCountry').on('change.permCountry', '#ef-guest-perm-country', function(){
             var isBD = $(this).val() === 'Bangladesh';
             $('#wrap-ef-guest-perm-dist, #wrap-ef-guest-perm-upazila').toggle(isBD);
-            if (!isBD && $.fn.select2) {
-                $('#ef-guest-perm-dist, #ef-guest-perm-upazila').val('').trigger('change.select2');
+            if (!isBD) {
+                $('#ef-guest-perm-dist, #ef-guest-perm-upazila').val('');
+                if (typeof $.fn.select2 !== 'undefined') {
+                    $('#ef-guest-perm-dist, #ef-guest-perm-upazila').trigger('change');
+                }
             }
         });
 
@@ -1265,53 +1344,83 @@ function batchmate_event_form_shortcode( $atts ) {
 
             var fields = guestFieldsCfg;
             var missingFields = [];
-            if (!gName) missingFields.push('Name');
-            if (!gCell) missingFields.push('Mobile');
-            if (fields.name_bn && fields.name_bn.show && fields.name_bn.req && !gNameBn) missingFields.push('Name (Bangla)');
-            if (fields.email && fields.email.show && fields.email.req && !gEmail) missingFields.push('Email');
-            if (fields.gender && fields.gender.show && fields.gender.req && !gGender) missingFields.push('Gender');
-            if (fields.blood_group && fields.blood_group.show && fields.blood_group.req && !gBlood) missingFields.push('Blood Group');
-            if (fields.dob && fields.dob.show && fields.dob.req && !gDob) missingFields.push('Date of Birth');
-            if (fields.religion && fields.religion.show && fields.religion.req && !gReligion) missingFields.push('Religion');
-            if (fields.land_phone && fields.land_phone.show && fields.land_phone.req && !gLand) missingFields.push('Alternative Number');
-            if (fields.board && fields.board.show && fields.board.req && !gBoard) missingFields.push('Board');
-            if (fields.institution && fields.institution.show && fields.institution.req && !gInst) missingFields.push('Institution');
-            if (fields.roll_no && fields.roll_no.show && fields.roll_no.req && !gRoll) missingFields.push('Roll No');
-            if (fields.reg_no && fields.reg_no.show && fields.reg_no.req && !gRegno) missingFields.push('Reg No');
-            if (fields.group && fields.group.show && fields.group.req && !gGroup) missingFields.push('Group');
-            if (fields.present_address && fields.present_address.show && fields.present_address.req && !gPresAddr) missingFields.push('Present Address');
-            if (fields.present_country && fields.present_country.show && fields.present_country.req && !gPresCountry) missingFields.push('Present Country');
-            if (fields.present_district && fields.present_district.show && fields.present_district.req && gPresCountry === 'Bangladesh' && !gPresDist) missingFields.push('Present District');
-            if (fields.present_upazila && fields.present_upazila.show && fields.present_upazila.req && gPresCountry === 'Bangladesh' && !gPresUpz) missingFields.push('Present Thana / Upazila');
-            if (fields.permanent_address && fields.permanent_address.show && fields.permanent_address.req && !gPermAddr) missingFields.push('Permanent Address');
-            if (fields.permanent_country && fields.permanent_country.show && fields.permanent_country.req && !gPermCountry) missingFields.push('Permanent Country');
-            if (fields.permanent_district && fields.permanent_district.show && fields.permanent_district.req && gPermCountry === 'Bangladesh' && !gPermDist) missingFields.push('Permanent District');
-            if (fields.permanent_upazila && fields.permanent_upazila.show && fields.permanent_upazila.req && gPermCountry === 'Bangladesh' && !gPermUpz) missingFields.push('Permanent Thana / Upazila');
-            if (fields.organization && fields.organization.show && fields.organization.req && !gOrg) missingFields.push('Organization');
-            if (fields.position && fields.position.show && fields.position.req && !gPos) missingFields.push('Position / Designation');
-            if (fields.industry && fields.industry.show && fields.industry.req && !gInd) missingFields.push('Industry');
-            if (fields.work_experience && fields.work_experience.show && fields.work_experience.req && !gExp) missingFields.push('Work Experience');
-            if (fields.employment_address && fields.employment_address.show && fields.employment_address.req && !gEmpAddr) missingFields.push('Organization Address');
-            if (fields.previous_organizations && fields.previous_organizations.show && fields.previous_organizations.req && !gPrevOrg) missingFields.push('Previous Organizations');
-            if (fields.about_me && fields.about_me.show && fields.about_me.req && !gAbout) missingFields.push('About Me');
-            if (fields.skills && fields.skills.show && fields.skills.req && !gSkills) missingFields.push('Skills');
-            if (fields.facebook && fields.facebook.show && fields.facebook.req && !gFb) missingFields.push('Facebook URL');
-            if (fields.linkedin && fields.linkedin.show && fields.linkedin.req && !gLi) missingFields.push('LinkedIn URL');
-            if (fields.x && fields.x.show && fields.x.req && !gX) missingFields.push('X / Twitter URL');
-            if (fields.website && fields.website.show && fields.website.req && !gWeb) missingFields.push('Personal Website');
-            if (fields.photo && fields.photo.show && fields.photo.req && !gPhoto) missingFields.push('Photo');
+            var $firstMissing = null;
+
+            // Remove existing error styling
+            $result.find('.ef-field-error').removeClass('ef-field-error');
+
+            function markMissing(label, $elem) {
+                missingFields.push(label);
+                if ($elem && $elem.length) {
+                    $elem.addClass('ef-field-error');
+                    $elem.next('.select2-container').find('.select2-selection').addClass('ef-field-error');
+                    if (!$firstMissing) {
+                        $firstMissing = $elem;
+                    }
+                }
+            }
+
+            if (!gName) markMissing('Name / পুরো নাম', $('#ef-guest-name'));
+            if (!gCell) markMissing('Mobile / মোবাইল নম্বর', $('#ef-guest-cell'));
+            if (fields.name_bn && fields.name_bn.show && fields.name_bn.req && !gNameBn) markMissing(fields.name_bn.label || 'Name (Bangla) / বাংলা নাম', $('#ef-guest-name-bn'));
+            if (fields.email && fields.email.show && fields.email.req && !gEmail) markMissing('Email / ইমেইল', $('#ef-guest-email'));
+            if (fields.gender && fields.gender.show && fields.gender.req && !gGender) markMissing('Gender / লিঙ্গ', $('#ef-guest-gender'));
+            if (fields.blood_group && fields.blood_group.show && fields.blood_group.req && !gBlood) markMissing('Blood Group / রক্তের গ্রুপ', $('#ef-guest-blood'));
+            if (fields.dob && fields.dob.show && fields.dob.req && !gDob) markMissing('Date of Birth / জন্মতারিখ', $('#ef-guest-dob'));
+            if (fields.religion && fields.religion.show && fields.religion.req && !gReligion) markMissing('Religion / ধর্ম', $('#ef-guest-religion'));
+            if (fields.land_phone && fields.land_phone.show && fields.land_phone.req && !gLand) markMissing('Alternative Number / বিকল্প নম্বর', $('#ef-guest-land-phone'));
+            if (fields.board && fields.board.show && fields.board.req && !gBoard) markMissing('Board / বোর্ড', $('#ef-guest-board'));
+            if (fields.institution && fields.institution.show && fields.institution.req && !gInst) markMissing(fields.institution.label || 'Institution / প্রতিষ্ঠান', $('#ef-guest-institution'));
+            if (fields.roll_no && fields.roll_no.show && fields.roll_no.req && !gRoll) markMissing('Roll No / রোল নম্বর', $('#ef-guest-roll'));
+            if (fields.reg_no && fields.reg_no.show && fields.reg_no.req && !gRegno) markMissing('Reg No / রেজিস্ট্রেশন নম্বর', $('#ef-guest-regno'));
+            if (fields.group && fields.group.show && fields.group.req && !gGroup) markMissing('Group / বিভাগ', $('#ef-guest-group'));
+            if (fields.present_address && fields.present_address.show && fields.present_address.req && !gPresAddr) markMissing('Present Address / বর্তমান ঠিকানা', $('#ef-guest-pres-addr'));
+            if (fields.present_country && fields.present_country.show && fields.present_country.req && !gPresCountry) markMissing('Present Country / বর্তমান দেশ', $('#ef-guest-pres-country'));
+            if (fields.present_district && fields.present_district.show && fields.present_district.req && gPresCountry === 'Bangladesh' && !gPresDist) markMissing(fields.present_district.label || 'Present District / বর্তমান জেলা', $('#ef-guest-pres-dist'));
+            if (fields.present_upazila && fields.present_upazila.show && fields.present_upazila.req && gPresCountry === 'Bangladesh' && !gPresUpz) markMissing(fields.present_upazila.label || 'Present Thana / Upazila / বর্তমান থানা/উপজেলা', $('#ef-guest-pres-upazila'));
+            if (fields.permanent_address && fields.permanent_address.show && fields.permanent_address.req && !gPermAddr) markMissing('Permanent Address / স্থায়ী ঠিকানা', $('#ef-guest-perm-addr'));
+            if (fields.permanent_country && fields.permanent_country.show && fields.permanent_country.req && !gPermCountry) markMissing('Permanent Country / স্থায়ী দেশ', $('#ef-guest-perm-country'));
+            if (fields.permanent_district && fields.permanent_district.show && fields.permanent_district.req && gPermCountry === 'Bangladesh' && !gPermDist) markMissing(fields.permanent_district.label || 'Permanent District / স্থায়ী জেলা', $('#ef-guest-perm-dist'));
+            if (fields.permanent_upazila && fields.permanent_upazila.show && fields.permanent_upazila.req && gPermCountry === 'Bangladesh' && !gPermUpz) markMissing(fields.permanent_upazila.label || 'Permanent Thana / Upazila / স্থায়ী থানা/উপজেলা', $('#ef-guest-perm-upazila'));
+            if (fields.organization && fields.organization.show && fields.organization.req && !gOrg) markMissing('Organization / প্রতিষ্ঠান', $('#ef-guest-org'));
+            if (fields.position && fields.position.show && fields.position.req && !gPos) markMissing('Position / পদবি', $('#ef-guest-pos'));
+            if (fields.industry && fields.industry.show && fields.industry.req && !gInd) markMissing('Industry / সেক্টর', $('#ef-guest-ind'));
+            if (fields.work_experience && fields.work_experience.show && fields.work_experience.req && !gExp) markMissing('Work Experience / অভিজ্ঞতা', $('#ef-guest-exp'));
+            if (fields.employment_address && fields.employment_address.show && fields.employment_address.req && !gEmpAddr) markMissing('Organization Address / অফিসের ঠিকানা', $('#ef-guest-emp-addr'));
+            if (fields.previous_organizations && fields.previous_organizations.show && fields.previous_organizations.req && !gPrevOrg) markMissing('Previous Organizations / পূর্ববর্তী প্রতিষ্ঠান', $('#ef-guest-prev-org'));
+            if (fields.about_me && fields.about_me.show && fields.about_me.req && !gAbout) markMissing('About Me / নিজের সম্পর্কে', $('#ef-guest-about'));
+            if (fields.skills && fields.skills.show && fields.skills.req && !gSkills) markMissing('Skills / দক্ষতা', $('#ef-guest-skills'));
+            if (fields.facebook && fields.facebook.show && fields.facebook.req && !gFb) markMissing('Facebook URL / ফেসবুক লিঙ্ক', $('#ef-guest-fb'));
+            if (fields.linkedin && fields.linkedin.show && fields.linkedin.req && !gLi) markMissing('LinkedIn URL / লিংকডইন লিঙ্ক', $('#ef-guest-li'));
+            if (fields.x && fields.x.show && fields.x.req && !gX) markMissing('X / Twitter URL', $('#ef-guest-x'));
+            if (fields.website && fields.website.show && fields.website.req && !gWeb) markMissing('Personal Website / ওয়েবসাইট', $('#ef-guest-web'));
+            if (fields.photo && fields.photo.show && fields.photo.req && !gPhoto) markMissing('Photo (400x400) / ছবি', $('#ef-guest-photo'));
 
             if (missingFields.length > 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Required Fields Missing',
-                    html: '<p style="margin:0 0 10px;color:#555;">Please fill in the following required fields:</p>' +
-                          '<ul style="text-align:left;margin:0;padding-left:20px;color:#d63638;font-weight:600;">' +
-                          missingFields.map(function(f){ return '<li>' + f + '</li>'; }).join('') +
-                          '</ul>',
-                    confirmButtonText: 'OK, Fix It',
-                    confirmButtonColor: '#2271b1',
-                });
+                var missingListHtml = '<ul style="text-align:left; margin:10px 0 0; padding-left:22px; color:#dc2626; font-size:13.5px; line-height:1.8;">' +
+                    missingFields.map(function(f){ return '<li><strong>' + f + '</strong> পূরণ করা আবশ্যক</li>'; }).join('') +
+                    '</ul>';
+
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'প্রয়োজনীয় ফিল্ড পূরণ করুন (*)',
+                        html: '<p style="margin:0; color:#475569; font-size:14px;">অনুগ্রহ করে নিচের লাল চিহ্নিত <strong>(*)</strong> ফিল্ডগুলো পূরণ করুন:</p>' + missingListHtml,
+                        confirmButtonText: 'ঠিক আছে, পূরণ করছি',
+                        confirmButtonColor: '#2563eb',
+                    }).then(function(){
+                        if ($firstMissing && $firstMissing.length) {
+                            $('html, body').animate({ scrollTop: $firstMissing.offset().top - 140 }, 300);
+                            $firstMissing.focus();
+                        }
+                    });
+                } else {
+                    alert('প্রয়োজনীয় ফিল্ড পূরণ করুন (*):\n\n' + missingFields.join('\n'));
+                    if ($firstMissing && $firstMissing.length) {
+                        $('html, body').animate({ scrollTop: $firstMissing.offset().top - 140 }, 300);
+                        $firstMissing.focus();
+                    }
+                }
                 return;
             }
 
@@ -1417,20 +1526,28 @@ function batchmate_event_form_shortcode( $atts ) {
             } else {
                 tshirtVal = $('#ef-tshirt-size').val();
                 if (!tshirtVal) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Gift / T-Shirt Required',
-                        text: 'Please select your T-Shirt size before submitting.',
-                        confirmButtonColor: '#2271b1',
-                    });
-                    $('#ef-tshirt-size').focus();
+                    var $ts = $('#ef-tshirt-size');
+                    $ts.addClass('ef-field-error');
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'টি-শার্ট সাইজ আবশ্যক',
+                            text: 'অনুগ্রহ করে আপনার টি-শার্ট সাইজ নির্বাচন করুন।',
+                            confirmButtonText: 'ঠিক আছে',
+                            confirmButtonColor: '#2563eb',
+                        }).then(function(){ $ts.focus(); });
+                    } else {
+                        alert('অনুগ্রহ করে টি-শার্ট সাইজ নির্বাচন করুন।');
+                        $ts.focus();
+                    }
                     return;
                 }
             }
             formData.append('tshirt_size', tshirtVal);
         }
 
-        var $btn = $(this).prop('disabled', true).html('&#8987; Submitting�');
+        var $btn = $(this).prop('disabled', true).html('&#8987; Submitting...');
+        $('#ef-submit-error-banner').remove();
 
         $.ajax({
             url: ajaxUrl, type: 'POST',
@@ -1442,13 +1559,49 @@ function batchmate_event_form_shortcode( $atts ) {
                 $input.val(''); lastQ = '';
                 $hint.html('&#9660; Results appear automatically after 3 characters.').removeClass('typing');
             } else {
-                $result.html('<div class="ef-anim">' + mkNotice('error', '&#10008; ' + res.data) + '</div>');
-                $btn.prop('disabled', false).html('&#10003; Confirm Registration');
+                // Keep the form intact so user does not lose their entered data!
+                $btn.prop('disabled', false).html(submitBtnText);
+                var errMsg = res.data || 'Failed to submit registration.';
+                
+                // Show notice banner inside form
+                $('#ef-submit-error-banner').remove();
+                $result.find('.BatchMate-ef-card-body').prepend('<div class="ef-anim" id="ef-submit-error-banner" style="margin-bottom:16px;">' + mkNotice('error', '&#10008; ' + errMsg) + '</div>');
+                $('html, body').animate({ scrollTop: $('#ef-submit-error-banner').offset().top - 140 }, 300);
+
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'আবেদন গ্রহণ করা যায়নি',
+                        html: '<p style="color:#b91c1c; font-size:14px; margin:0;">' + errMsg + '</p>',
+                        confirmButtonText: 'ঠিক আছে',
+                        confirmButtonColor: '#2563eb',
+                    });
+                }
             }
         }).fail(function() {
-            $result.html('<div class="ef-anim">' + mkNotice('error', 'Connection error. Please try again.') + '</div>');
-            $btn.prop('disabled', false).html('&#10003; Confirm Registration');
+            $btn.prop('disabled', false).html(submitBtnText);
+            var connErr = 'Connection error. Please try again.';
+            $('#ef-submit-error-banner').remove();
+            $result.find('.BatchMate-ef-card-body').prepend('<div class="ef-anim" id="ef-submit-error-banner" style="margin-bottom:16px;">' + mkNotice('error', '&#10008; ' + connErr) + '</div>');
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'সংযোগ সমস্যা',
+                    text: connErr,
+                    confirmButtonColor: '#2563eb',
+                });
+            } else {
+                alert(connErr);
+            }
         });
+    });
+
+    // Clear red error highlights as soon as user types or changes the field
+    $(document).on('input change', '.BatchMate-ef-wrap input, .BatchMate-ef-wrap select, .BatchMate-ef-wrap textarea', function(){
+        $(this).removeClass('ef-field-error');
+        $(this).next('.select2-container').find('.select2-selection').removeClass('ef-field-error');
+        $('#ef-submit-error-banner').slideUp(200);
+    });
     });
 
     // Option 4 render is now handled inside the $.ajax().done() callback above

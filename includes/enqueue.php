@@ -75,8 +75,12 @@ function BatchMate_load_public_scripts(): void {
     $plugin_url = ROYAL_BATCHMATE_PLUGIN_URL;
 
     // Enqueue Select2 for frontend (event forms, member directory, registration)
-    wp_enqueue_style(  'select2-css', $plugin_url . 'assets/select2/select2.min.css' );
-    wp_enqueue_script( 'select2-js',  $plugin_url . 'assets/select2/select2.min.js', [ 'jquery' ], '4.1.0', true );
+    wp_enqueue_style(  'select2-css', $plugin_url . 'assets/select2/select2.min.css', [], '4.1.0' );
+    wp_enqueue_script( 'select2-js',  $plugin_url . 'assets/select2/select2.min.js', [ 'jquery' ], '4.1.0', false );
+
+    // Enqueue SweetAlert2 for frontend (event registration validation popups, notifications)
+    wp_enqueue_style(  'sweetalert2-css', $plugin_url . 'assets/sweetalert2/sweetalert2.min.css', [], '11.0.0' );
+    wp_enqueue_script( 'sweetalert2-js',  $plugin_url . 'assets/sweetalert2/sweetalert2.all.min.js', [], '11.0.0', false );
 
     if ( is_page_template( 'template-members.php' ) ) {
         wp_enqueue_style(  'datatables-css', $plugin_url . 'assets/datatables/datatables.min.css' );

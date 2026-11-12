@@ -1046,6 +1046,18 @@ function batchmate_ensure_location_columns() {
         if ( ! in_array( 'institution', $cols, true ) ) {
             $wpdb->query( "ALTER TABLE {$table} ADD COLUMN institution varchar(255) DEFAULT NULL AFTER edu_group" );
         }
+
+        // Expand status column if it was varchar(20) to prevent 'Data too long' errors on long event names
+        $status_col = $wpdb->get_row( "SHOW COLUMNS FROM {$table} LIKE 'status'" );
+        if ( ! empty( $status_col ) && stripos( $status_col->Type, 'varchar(20)' ) !== false ) {
+            $wpdb->query( "ALTER TABLE {$table} MODIFY COLUMN status varchar(100) NOT NULL DEFAULT 'pending'" );
+        }
+
+        // Ensure submission_date is nullable to prevent strict MySQL zero-date errors
+        $sub_col = $wpdb->get_row( "SHOW COLUMNS FROM {$table} LIKE 'submission_date'" );
+        if ( ! empty( $sub_col ) && strtoupper( $sub_col->Null ?? '' ) === 'NO' ) {
+            $wpdb->query( "ALTER TABLE {$table} MODIFY COLUMN submission_date datetime DEFAULT NULL" );
+        }
     }
 }
 
