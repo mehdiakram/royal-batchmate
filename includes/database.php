@@ -986,6 +986,14 @@ function batchmate_ensure_location_columns() {
         $cols = $wpdb->get_col( "SHOW COLUMNS FROM {$table}" );
         if ( empty( $cols ) ) continue;
 
+        // Ensure district columns exist before country/upazila columns that reference them
+        if ( ! in_array( 'present_district', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN present_district varchar(100) DEFAULT NULL AFTER present_address" );
+        }
+        if ( ! in_array( 'permanent_district', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN permanent_district varchar(100) DEFAULT NULL AFTER permanent_address" );
+        }
+
         // present_upazila / upazila (permanent)
         if ( ! in_array( 'present_upazila', $cols, true ) ) {
             $wpdb->query( "ALTER TABLE {$table} ADD COLUMN present_upazila varchar(100) DEFAULT NULL AFTER present_district" );
@@ -1006,12 +1014,6 @@ function batchmate_ensure_location_columns() {
         }
         if ( ! in_array( 'permanent_country', $cols, true ) ) {
             $wpdb->query( "ALTER TABLE {$table} ADD COLUMN permanent_country varchar(100) DEFAULT 'Bangladesh' AFTER permanent_district" );
-        }
-        if ( ! in_array( 'permanent_district', $cols, true ) ) {
-            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN permanent_district varchar(100) DEFAULT NULL AFTER permanent_address" );
-        }
-        if ( ! in_array( 'present_district', $cols, true ) ) {
-            $wpdb->query( "ALTER TABLE {$table} ADD COLUMN present_district varchar(100) DEFAULT NULL AFTER present_address" );
         }
         if ( ! in_array( 'organization', $cols, true ) ) {
             $wpdb->query( "ALTER TABLE {$table} ADD COLUMN organization varchar(255) DEFAULT NULL AFTER employment_position" );

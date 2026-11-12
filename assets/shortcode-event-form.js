@@ -156,17 +156,23 @@
     /* ---- Build guest form HTML from guestFieldsCfg ---- */
     function buildGuestFormHtml(currentGender) {
         var html = '<div class="BatchMate-ef-pay-title">&#128100; Personal Information</div>';
-        var fields = guestFieldsCfg;
+        var fields = guestFieldsCfg || {};
         var req = function(r){ return r ? ' <span style="color:#c53030">*</span>' : ''; };
+        var escHtml = function(str) {
+            return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        };
+        var lbl = function(key, fallback) {
+            return escHtml((fields[key] && fields[key].label) ? fields[key].label : fallback);
+        };
 
-        // Row 1: Name, Name Bangla (if shown), Mobile (always)
+        // Row 1: Name, Name Bangla (if shown), Cell Number (always)
         var nameBnShow = fields.name_bn && fields.name_bn.show;
         html += '<div class="' + (nameBnShow ? 'BatchMate-ef-grid-3' : 'BatchMate-ef-grid-2') + '">';
-        html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Name <span style="color:#c53030">*</span></label><input type="text" id="ef-guest-name" placeholder="Full Name"></div>';
+        html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('name', 'Name (English)') + ' <span style="color:#c53030">*</span></label><input type="text" id="ef-guest-name" placeholder="Full Name"></div>';
         if (nameBnShow) {
-            html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Name (Bangla)' + req(fields.name_bn.req) + '</label><input type="text" id="ef-guest-name-bn" placeholder="বাংলা নাম"></div>';
+            html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('name_bn', 'Name (Bangla)') + req(fields.name_bn.req) + '</label><input type="text" id="ef-guest-name-bn" placeholder="বাংলা নাম"></div>';
         }
-        html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Mobile <span style="color:#c53030">*</span></label><input type="text" id="ef-guest-cell" inputmode="numeric" placeholder="01XXXXXXXXX"></div>';
+        html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('cell', 'Cell Number') + ' <span style="color:#c53030">*</span></label><input type="text" id="ef-guest-cell" inputmode="numeric" placeholder="01XXXXXXXXX"></div>';
         html += '</div>';
 
         // Row 2: Email, Gender, Blood Group
@@ -178,18 +184,19 @@
             var r2Class = r2Count === 3 ? 'BatchMate-ef-grid-3' : (r2Count === 2 ? 'BatchMate-ef-grid-2' : 'BatchMate-ef-grid-1');
             html += '<div class="' + r2Class + '">';
             if (emailShow) {
-                html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + (fields.email.req ? ('Email' + req(true)) : 'Email (Optional)') + '</label><input type="email" id="ef-guest-email" placeholder="example@email.com"></div>';
+                var emailLbl = lbl('email', 'Email');
+                html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + (fields.email.req ? (emailLbl + req(true)) : (emailLbl + ' (Optional)')) + '</label><input type="email" id="ef-guest-email" placeholder="example@email.com"></div>';
             }
             if (genderShow) {
                 var isFem = (currentGender === 'Female');
-                html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Gender' + req(fields.gender.req) + '</label>' +
+                html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('gender', 'Gender') + req(fields.gender.req) + '</label>' +
                     '<select id="ef-guest-gender">' +
                     '<option value="Male"' + (!isFem ? ' selected' : '') + '>Male</option>' +
                     '<option value="Female"' + (isFem ? ' selected' : '') + '>Female</option>' +
                     '</select></div>';
             }
             if (bloodShow) {
-                html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Blood Group' + req(fields.blood_group.req) + '</label>' +
+                html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('blood_group', 'Blood Group') + req(fields.blood_group.req) + '</label>' +
                     '<select id="ef-guest-blood"><option value="">Select...</option>' +
                     '<option>A+</option><option>A-</option><option>B+</option><option>B-</option>' +
                     '<option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>' +
@@ -207,16 +214,16 @@
             var r3Class = r3Count === 3 ? 'BatchMate-ef-grid-3' : (r3Count === 2 ? 'BatchMate-ef-grid-2' : 'BatchMate-ef-grid-1');
             html += '<div class="' + r3Class + '">';
             if (dobShow) {
-                html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Date of Birth' + req(fields.dob.req) + '</label><input type="date" id="ef-guest-dob"></div>';
+                html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('dob', 'Date of Birth') + req(fields.dob.req) + '</label><input type="date" id="ef-guest-dob"></div>';
             }
             if (religionShow) {
-                html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Religion' + req(fields.religion.req) + '</label>' +
+                html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('religion', 'Religion') + req(fields.religion.req) + '</label>' +
                     '<select id="ef-guest-religion"><option value="">Select Religion...</option>' +
                     '<option>Islam</option><option>Hinduism</option><option>Buddhism</option><option>Christianity</option><option>Others</option>' +
                     '</select></div>';
             }
             if (landShow) {
-                html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Alternative Number' + req(fields.land_phone.req) + '</label><input type="text" id="ef-guest-land-phone" placeholder="Alternative Number"></div>';
+                html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('land_phone', 'Alternative Number') + req(fields.land_phone.req) + '</label><input type="text" id="ef-guest-land-phone" placeholder="Alternative Number"></div>';
             }
             html += '</div>';
         }
@@ -236,7 +243,7 @@
                 var a1Class = acadRow1Count === 3 ? 'BatchMate-ef-grid-3' : (acadRow1Count === 2 ? 'BatchMate-ef-grid-2' : 'BatchMate-ef-grid-1');
                 html += '<div class="' + a1Class + '">';
                 if (boardShow) {
-                    html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Board' + req(fields.board.req) + '</label>' +
+                    html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('board', 'Name of Board') + req(fields.board.req) + '</label>' +
                         '<select id="ef-guest-board"><option value="">Select Board...</option>' +
                         '<option value="dhaka">Dhaka</option><option value="barisal">Barisal</option><option value="chittagong">Chittagong</option>' +
                         '<option value="comilla">Comilla</option><option value="dinajpur">Dinajpur</option><option value="jessore">Jessore</option>' +
@@ -245,10 +252,10 @@
                         '</select></div>';
                 }
                 if (rollShow) {
-                    html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Roll No' + req(fields.roll_no.req) + '</label><input type="text" id="ef-guest-roll" placeholder="SSC Roll"></div>';
+                    html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('roll_no', 'SSC Roll') + req(fields.roll_no.req) + '</label><input type="text" id="ef-guest-roll" placeholder="SSC Roll"></div>';
                 }
                 if (regNoShow) {
-                    html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Reg No' + req(fields.reg_no.req) + '</label><input type="text" id="ef-guest-regno" placeholder="Registration No"></div>';
+                    html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('reg_no', 'Registration No') + req(fields.reg_no.req) + '</label><input type="text" id="ef-guest-regno" placeholder="Registration No"></div>';
                 }
                 html += '</div>';
             }
@@ -258,7 +265,7 @@
                 var a2Class = acadRow2Count === 2 ? 'BatchMate-ef-grid-2' : 'BatchMate-ef-grid-1';
                 html += '<div class="' + a2Class + '">';
                 if (groupShow) {
-                    html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Group' + req(fields.group.req) + '</label>' +
+                    html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('group', 'Group') + req(fields.group.req) + '</label>' +
                         '<select id="ef-guest-group"><option value="">Select Group...</option>' +
                         '<option>Science</option><option>Humanities</option><option>Commerce</option><option>Vocational</option><option>Others</option>' +
                         '</select></div>';
@@ -270,7 +277,7 @@
                             instDatalistOptions += '<option value="' + inst.replace(/"/g, '&quot;') + '"></option>';
                         });
                     }
-                    html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + (fields.institution.label || 'Institution') + req(fields.institution.req) + '</label>' +
+                    html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('institution', 'Institution') + req(fields.institution.req) + '</label>' +
                         '<input type="text" id="ef-guest-institution" list="ef-institutions-list" placeholder="School / College Name" autocomplete="off">' +
                         '<datalist id="ef-institutions-list">' + instDatalistOptions + '</datalist>' +
                         '</div>';
@@ -295,10 +302,10 @@
                 var addrClass = (presAddrShow && permAddrShow) ? 'BatchMate-ef-grid-2' : 'BatchMate-ef-grid-1';
                 html += '<div class="' + addrClass + '">';
                 if (presAddrShow) {
-                    html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Present Address' + req(fields.present_address.req) + '</label><input type="text" id="ef-guest-pres-addr" placeholder="House, Road, Area"></div>';
+                    html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('present_address', 'Present Address') + req(fields.present_address.req) + '</label><input type="text" id="ef-guest-pres-addr" placeholder="House, Road, Area"></div>';
                 }
                 if (permAddrShow) {
-                    html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Permanent Address' + req(fields.permanent_address.req) + '</label><input type="text" id="ef-guest-perm-addr" placeholder="Village, Area"></div>';
+                    html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('permanent_address', 'Permanent Address') + req(fields.permanent_address.req) + '</label><input type="text" id="ef-guest-perm-addr" placeholder="Village, Area"></div>';
                 }
                 html += '</div>';
             }
@@ -317,7 +324,7 @@
                     } else {
                         cOpts += '<option value="Bangladesh" selected>Bangladesh</option>';
                     }
-                    html += '<div class="BatchMate-ef-pay-group" id="wrap-ef-guest-pres-country" style="margin-bottom:0;"><label>Present Country' + req(fields.present_country.req) + '</label><select id="ef-guest-pres-country" class="ef-select2">' + cOpts + '</select></div>';
+                    html += '<div class="BatchMate-ef-pay-group" id="wrap-ef-guest-pres-country" style="margin-bottom:0;"><label>' + lbl('present_country', 'Present Country') + req(fields.present_country.req) + '</label><select id="ef-guest-pres-country" class="ef-select2">' + cOpts + '</select></div>';
                 }
                 if (presDistShow) {
                     var dOpts = '<option value="">Select District...</option>';
@@ -326,10 +333,10 @@
                             dOpts += '<option value="' + d + '">' + d + '</option>';
                         });
                     }
-                    html += '<div class="BatchMate-ef-pay-group" id="wrap-ef-guest-pres-dist" style="margin-bottom:0;"><label>' + (fields.present_district.label || 'Present District') + req(fields.present_district.req) + '</label><select id="ef-guest-pres-dist" class="ef-select2">' + dOpts + '</select></div>';
+                    html += '<div class="BatchMate-ef-pay-group" id="wrap-ef-guest-pres-dist" style="margin-bottom:0;"><label>' + lbl('present_district', 'Present District') + req(fields.present_district.req) + '</label><select id="ef-guest-pres-dist" class="ef-select2">' + dOpts + '</select></div>';
                 }
                 if (presUpzShow) {
-                    html += '<div class="BatchMate-ef-pay-group" id="wrap-ef-guest-pres-upazila" style="margin-bottom:0;"><label>' + (fields.present_upazila.label || 'Present Thana / Upazila') + req(fields.present_upazila.req) + '</label><select id="ef-guest-pres-upazila" class="ef-select2"><option value="">Select Thana / Upazila...</option></select></div>';
+                    html += '<div class="BatchMate-ef-pay-group" id="wrap-ef-guest-pres-upazila" style="margin-bottom:0;"><label>' + lbl('present_upazila', 'Present Thana / Upazila') + req(fields.present_upazila.req) + '</label><select id="ef-guest-pres-upazila" class="ef-select2"><option value="">Select Thana / Upazila...</option></select></div>';
                 }
                 html += '</div>';
             }
@@ -348,7 +355,7 @@
                     } else {
                         cOpts2 += '<option value="Bangladesh" selected>Bangladesh</option>';
                     }
-                    html += '<div class="BatchMate-ef-pay-group" id="wrap-ef-guest-perm-country" style="margin-bottom:0;"><label>Permanent Country' + req(fields.permanent_country.req) + '</label><select id="ef-guest-perm-country" class="ef-select2">' + cOpts2 + '</select></div>';
+                    html += '<div class="BatchMate-ef-pay-group" id="wrap-ef-guest-perm-country" style="margin-bottom:0;"><label>' + lbl('permanent_country', 'Permanent Country') + req(fields.permanent_country.req) + '</label><select id="ef-guest-perm-country" class="ef-select2">' + cOpts2 + '</select></div>';
                 }
                 if (permDistShow) {
                     var dOpts2 = '<option value="">Select District...</option>';
@@ -357,10 +364,10 @@
                             dOpts2 += '<option value="' + d + '">' + d + '</option>';
                         });
                     }
-                    html += '<div class="BatchMate-ef-pay-group" id="wrap-ef-guest-perm-dist" style="margin-bottom:0;"><label>' + (fields.permanent_district.label || 'Permanent District') + req(fields.permanent_district.req) + '</label><select id="ef-guest-perm-dist" class="ef-select2">' + dOpts2 + '</select></div>';
+                    html += '<div class="BatchMate-ef-pay-group" id="wrap-ef-guest-perm-dist" style="margin-bottom:0;"><label>' + lbl('permanent_district', 'Permanent District') + req(fields.permanent_district.req) + '</label><select id="ef-guest-perm-dist" class="ef-select2">' + dOpts2 + '</select></div>';
                 }
                 if (permUpzShow) {
-                    html += '<div class="BatchMate-ef-pay-group" id="wrap-ef-guest-perm-upazila" style="margin-bottom:0;"><label>' + (fields.permanent_upazila.label || 'Permanent Thana / Upazila') + req(fields.permanent_upazila.req) + '</label><select id="ef-guest-perm-upazila" class="ef-select2"><option value="">Select Thana / Upazila...</option></select></div>';
+                    html += '<div class="BatchMate-ef-pay-group" id="wrap-ef-guest-perm-upazila" style="margin-bottom:0;"><label>' + lbl('permanent_upazila', 'Permanent Thana / Upazila') + req(fields.permanent_upazila.req) + '</label><select id="ef-guest-perm-upazila" class="ef-select2"><option value="">Select Thana / Upazila...</option></select></div>';
                 }
                 html += '</div>';
             }
@@ -381,29 +388,29 @@
             if (orgShow || posShow) {
                 var p1Class = (orgShow && posShow) ? 'BatchMate-ef-grid-2' : 'BatchMate-ef-grid-1';
                 html += '<div class="' + p1Class + '">';
-                if (orgShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Organization' + req(fields.organization.req) + '</label><input type="text" id="ef-guest-org" placeholder="Current Workplace"></div>';
-                if (posShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Position / Designation' + req(fields.position.req) + '</label><input type="text" id="ef-guest-pos" placeholder="e.g. Manager, Officer"></div>';
+                if (orgShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('organization', 'Organization') + req(fields.organization.req) + '</label><input type="text" id="ef-guest-org" placeholder="Current Workplace"></div>';
+                if (posShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('position', 'Position / Designation') + req(fields.position.req) + '</label><input type="text" id="ef-guest-pos" placeholder="e.g. Manager, Officer"></div>';
                 html += '</div>';
             }
             if (indShow || expShow) {
                 var p2Class = (indShow && expShow) ? 'BatchMate-ef-grid-2' : 'BatchMate-ef-grid-1';
                 html += '<div class="' + p2Class + '">';
-                if (indShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Industry' + req(fields.industry.req) + '</label><input type="text" id="ef-guest-ind" placeholder="e.g. IT, Textile, Banking"></div>';
-                if (expShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Work Experience' + req(fields.work_experience.req) + '</label><input type="text" id="ef-guest-exp" placeholder="e.g. 5 Years"></div>';
+                if (indShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('industry', 'Industry') + req(fields.industry.req) + '</label><input type="text" id="ef-guest-ind" placeholder="e.g. IT, Textile, Banking"></div>';
+                if (expShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('work_experience', 'Work Experience') + req(fields.work_experience.req) + '</label><input type="text" id="ef-guest-exp" placeholder="e.g. 5 Years"></div>';
                 html += '</div>';
             }
             if (empAddrShow || prevOrgShow) {
                 var p3Class = (empAddrShow && prevOrgShow) ? 'BatchMate-ef-grid-2' : 'BatchMate-ef-grid-1';
                 html += '<div class="' + p3Class + '">';
-                if (empAddrShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Organization Address' + req(fields.employment_address.req) + '</label><input type="text" id="ef-guest-emp-addr" placeholder="Workplace Address"></div>';
-                if (prevOrgShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Previous Organizations' + req(fields.previous_organizations.req) + '</label><input type="text" id="ef-guest-prev-org" placeholder="Past companies"></div>';
+                if (empAddrShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('employment_address', 'Organization Address') + req(fields.employment_address.req) + '</label><input type="text" id="ef-guest-emp-addr" placeholder="Workplace Address"></div>';
+                if (prevOrgShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('previous_organizations', 'Previous Organizations') + req(fields.previous_organizations.req) + '</label><input type="text" id="ef-guest-prev-org" placeholder="Past companies"></div>';
                 html += '</div>';
             }
             if (aboutShow || skillsShow) {
                 var p4Class = (aboutShow && skillsShow) ? 'BatchMate-ef-grid-2' : 'BatchMate-ef-grid-1';
                 html += '<div class="' + p4Class + '">';
-                if (aboutShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>About Me' + req(fields.about_me.req) + '</label><input type="text" id="ef-guest-about" placeholder="Brief bio"></div>';
-                if (skillsShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Skills' + req(fields.skills.req) + '</label><input type="text" id="ef-guest-skills" placeholder="e.g. Management, Public Relations"></div>';
+                if (aboutShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('about_me', 'About Me') + req(fields.about_me.req) + '</label><input type="text" id="ef-guest-about" placeholder="Brief bio"></div>';
+                if (skillsShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('skills', 'Skills') + req(fields.skills.req) + '</label><input type="text" id="ef-guest-skills" placeholder="e.g. Management, Public Relations"></div>';
                 html += '</div>';
             }
         }
@@ -419,15 +426,15 @@
             if (fbShow || liShow) {
                 var s1Class = (fbShow && liShow) ? 'BatchMate-ef-grid-2' : 'BatchMate-ef-grid-1';
                 html += '<div class="' + s1Class + '">';
-                if (fbShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Facebook URL' + req(fields.facebook.req) + '</label><input type="url" id="ef-guest-fb" placeholder="https://facebook.com/username"></div>';
-                if (liShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>LinkedIn URL' + req(fields.linkedin.req) + '</label><input type="url" id="ef-guest-li" placeholder="https://linkedin.com/in/username"></div>';
+                if (fbShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('facebook', 'Facebook URL') + req(fields.facebook.req) + '</label><input type="url" id="ef-guest-fb" placeholder="https://facebook.com/username"></div>';
+                if (liShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('linkedin', 'LinkedIn URL') + req(fields.linkedin.req) + '</label><input type="url" id="ef-guest-li" placeholder="https://linkedin.com/in/username"></div>';
                 html += '</div>';
             }
             if (xShow || webShow) {
                 var s2Class = (xShow && webShow) ? 'BatchMate-ef-grid-2' : 'BatchMate-ef-grid-1';
                 html += '<div class="' + s2Class + '">';
-                if (xShow)  html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>X / Twitter URL' + req(fields.x.req) + '</label><input type="url" id="ef-guest-x" placeholder="https://x.com/username"></div>';
-                if (webShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>Personal Website' + req(fields.website.req) + '</label><input type="url" id="ef-guest-web" placeholder="https://yourwebsite.com"></div>';
+                if (xShow)  html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('x', 'X / Twitter URL') + req(fields.x.req) + '</label><input type="url" id="ef-guest-x" placeholder="https://x.com/username"></div>';
+                if (webShow) html += '<div class="BatchMate-ef-pay-group" style="margin-bottom:0;"><label>' + lbl('website', 'Personal Website') + req(fields.website.req) + '</label><input type="url" id="ef-guest-web" placeholder="https://yourwebsite.com"></div>';
                 html += '</div>';
             }
         }
@@ -436,7 +443,7 @@
         var photoShow = fields.photo && fields.photo.show;
         if (photoShow) {
             html += '<div class="BatchMate-ef-pay-group" style="margin-top:16px;margin-bottom:14px;">' +
-                '<label style="display:block;font-weight:600;margin-bottom:6px;font-size:13px;color:#334155;">Photo (Square 400&times;400)' + req(fields.photo.req) + '</label>' +
+                '<label style="display:block;font-weight:600;margin-bottom:6px;font-size:13px;color:#334155;">' + lbl('photo', 'Photo (Square 400×400)') + req(fields.photo.req) + '</label>' +
                 '<div class="ef-photo-card">' +
                 '<div class="ef-photo-thumb" id="ef-photo-thumb-container">' +
                 '<img id="ef-photo-preview-img" src="' + noPhoto + '" alt="Photo Preview">' +
@@ -977,41 +984,44 @@
                 }
             }
 
-            if (!gName) markMissing('Name / পুরো নাম', $('#ef-guest-name'));
-            if (!gCell) markMissing('Mobile / মোবাইল নম্বর', $('#ef-guest-cell'));
-            if (fields.name_bn && fields.name_bn.show && fields.name_bn.req && !gNameBn) markMissing(fields.name_bn.label || 'Name (Bangla) / বাংলা নাম', $('#ef-guest-name-bn'));
-            if (fields.email && fields.email.show && fields.email.req && !gEmail) markMissing('Email / ইমেইল', $('#ef-guest-email'));
-            if (fields.gender && fields.gender.show && fields.gender.req && !gGender) markMissing('Gender / লিঙ্গ', $('#ef-guest-gender'));
-            if (fields.blood_group && fields.blood_group.show && fields.blood_group.req && !gBlood) markMissing('Blood Group / রক্তের গ্রুপ', $('#ef-guest-blood'));
-            if (fields.dob && fields.dob.show && fields.dob.req && !gDob) markMissing('Date of Birth / জন্মতারিখ', $('#ef-guest-dob'));
-            if (fields.religion && fields.religion.show && fields.religion.req && !gReligion) markMissing('Religion / ধর্ম', $('#ef-guest-religion'));
-            if (fields.land_phone && fields.land_phone.show && fields.land_phone.req && !gLand) markMissing('Alternative Number / বিকল্প নম্বর', $('#ef-guest-land-phone'));
-            if (fields.board && fields.board.show && fields.board.req && !gBoard) markMissing('Board / বোর্ড', $('#ef-guest-board'));
-            if (fields.institution && fields.institution.show && fields.institution.req && !gInst) markMissing(fields.institution.label || 'Institution / প্রতিষ্ঠান', $('#ef-guest-institution'));
-            if (fields.roll_no && fields.roll_no.show && fields.roll_no.req && !gRoll) markMissing('Roll No / রোল নম্বর', $('#ef-guest-roll'));
-            if (fields.reg_no && fields.reg_no.show && fields.reg_no.req && !gRegno) markMissing('Reg No / রেজিস্ট্রেশন নম্বর', $('#ef-guest-regno'));
-            if (fields.group && fields.group.show && fields.group.req && !gGroup) markMissing('Group / বিভাগ', $('#ef-guest-group'));
-            if (fields.present_address && fields.present_address.show && fields.present_address.req && !gPresAddr) markMissing('Present Address / বর্তমান ঠিকানা', $('#ef-guest-pres-addr'));
-            if (fields.present_country && fields.present_country.show && fields.present_country.req && !gPresCountry) markMissing('Present Country / বর্তমান দেশ', $('#ef-guest-pres-country'));
-            if (fields.present_district && fields.present_district.show && fields.present_district.req && gPresCountry === 'Bangladesh' && !gPresDist) markMissing(fields.present_district.label || 'Present District / বর্তমান জেলা', $('#ef-guest-pres-dist'));
-            if (fields.present_upazila && fields.present_upazila.show && fields.present_upazila.req && gPresCountry === 'Bangladesh' && !gPresUpz) markMissing(fields.present_upazila.label || 'Present Thana / Upazila / বর্তমান থানা/উপজেলা', $('#ef-guest-pres-upazila'));
-            if (fields.permanent_address && fields.permanent_address.show && fields.permanent_address.req && !gPermAddr) markMissing('Permanent Address / স্থায়ী ঠিকানা', $('#ef-guest-perm-addr'));
-            if (fields.permanent_country && fields.permanent_country.show && fields.permanent_country.req && !gPermCountry) markMissing('Permanent Country / স্থায়ী দেশ', $('#ef-guest-perm-country'));
-            if (fields.permanent_district && fields.permanent_district.show && fields.permanent_district.req && gPermCountry === 'Bangladesh' && !gPermDist) markMissing(fields.permanent_district.label || 'Permanent District / স্থায়ী জেলা', $('#ef-guest-perm-dist'));
-            if (fields.permanent_upazila && fields.permanent_upazila.show && fields.permanent_upazila.req && gPermCountry === 'Bangladesh' && !gPermUpz) markMissing(fields.permanent_upazila.label || 'Permanent Thana / Upazila / স্থায়ী থানা/উপজেলা', $('#ef-guest-perm-upazila'));
-            if (fields.organization && fields.organization.show && fields.organization.req && !gOrg) markMissing('Organization / প্রতিষ্ঠান', $('#ef-guest-org'));
-            if (fields.position && fields.position.show && fields.position.req && !gPos) markMissing('Position / পদবি', $('#ef-guest-pos'));
-            if (fields.industry && fields.industry.show && fields.industry.req && !gInd) markMissing('Industry / সেক্টর', $('#ef-guest-ind'));
-            if (fields.work_experience && fields.work_experience.show && fields.work_experience.req && !gExp) markMissing('Work Experience / অভিজ্ঞতা', $('#ef-guest-exp'));
-            if (fields.employment_address && fields.employment_address.show && fields.employment_address.req && !gEmpAddr) markMissing('Organization Address / অফিসের ঠিকানা', $('#ef-guest-emp-addr'));
-            if (fields.previous_organizations && fields.previous_organizations.show && fields.previous_organizations.req && !gPrevOrg) markMissing('Previous Organizations / পূর্ববর্তী প্রতিষ্ঠান', $('#ef-guest-prev-org'));
-            if (fields.about_me && fields.about_me.show && fields.about_me.req && !gAbout) markMissing('About Me / নিজের সম্পর্কে', $('#ef-guest-about'));
-            if (fields.skills && fields.skills.show && fields.skills.req && !gSkills) markMissing('Skills / দক্ষতা', $('#ef-guest-skills'));
-            if (fields.facebook && fields.facebook.show && fields.facebook.req && !gFb) markMissing('Facebook URL / ফেসবুক লিঙ্ক', $('#ef-guest-fb'));
-            if (fields.linkedin && fields.linkedin.show && fields.linkedin.req && !gLi) markMissing('LinkedIn URL / লিংকডইন লিঙ্ক', $('#ef-guest-li'));
-            if (fields.x && fields.x.show && fields.x.req && !gX) markMissing('X / Twitter URL', $('#ef-guest-x'));
-            if (fields.website && fields.website.show && fields.website.req && !gWeb) markMissing('Personal Website / ওয়েবসাইট', $('#ef-guest-web'));
-            if (fields.photo && fields.photo.show && fields.photo.req && !gPhoto) markMissing('Photo (400x400) / ছবি', $('#ef-guest-photo'));
+            var reqLbl = function(key, fallback) {
+                return (fields[key] && fields[key].label) ? fields[key].label : fallback;
+            };
+            if (!gName) markMissing(reqLbl('name', 'Name (English) / পুরো নাম'), $('#ef-guest-name'));
+            if (!gCell) markMissing(reqLbl('cell', 'Cell Number / মোবাইল নম্বর'), $('#ef-guest-cell'));
+            if (fields.name_bn && fields.name_bn.show && fields.name_bn.req && !gNameBn) markMissing(reqLbl('name_bn', 'Name (Bangla) / বাংলা নাম'), $('#ef-guest-name-bn'));
+            if (fields.email && fields.email.show && fields.email.req && !gEmail) markMissing(reqLbl('email', 'Email / ইমেইল'), $('#ef-guest-email'));
+            if (fields.gender && fields.gender.show && fields.gender.req && !gGender) markMissing(reqLbl('gender', 'Gender / লিঙ্গ'), $('#ef-guest-gender'));
+            if (fields.blood_group && fields.blood_group.show && fields.blood_group.req && !gBlood) markMissing(reqLbl('blood_group', 'Blood Group / রক্তের গ্রুপ'), $('#ef-guest-blood'));
+            if (fields.dob && fields.dob.show && fields.dob.req && !gDob) markMissing(reqLbl('dob', 'Date of Birth / জন্মতারিখ'), $('#ef-guest-dob'));
+            if (fields.religion && fields.religion.show && fields.religion.req && !gReligion) markMissing(reqLbl('religion', 'Religion / ধর্ম'), $('#ef-guest-religion'));
+            if (fields.land_phone && fields.land_phone.show && fields.land_phone.req && !gLand) markMissing(reqLbl('land_phone', 'Alternative Number / বিকল্প নম্বর'), $('#ef-guest-land-phone'));
+            if (fields.board && fields.board.show && fields.board.req && !gBoard) markMissing(reqLbl('board', 'Name of Board / বোর্ড'), $('#ef-guest-board'));
+            if (fields.institution && fields.institution.show && fields.institution.req && !gInst) markMissing(reqLbl('institution', 'Institution / প্রতিষ্ঠান'), $('#ef-guest-institution'));
+            if (fields.roll_no && fields.roll_no.show && fields.roll_no.req && !gRoll) markMissing(reqLbl('roll_no', 'SSC Roll / রোল নম্বর'), $('#ef-guest-roll'));
+            if (fields.reg_no && fields.reg_no.show && fields.reg_no.req && !gRegno) markMissing(reqLbl('reg_no', 'Registration No / রেজিস্ট্রেশন নম্বর'), $('#ef-guest-regno'));
+            if (fields.group && fields.group.show && fields.group.req && !gGroup) markMissing(reqLbl('group', 'Group / বিভাগ'), $('#ef-guest-group'));
+            if (fields.present_address && fields.present_address.show && fields.present_address.req && !gPresAddr) markMissing(reqLbl('present_address', 'Present Address / বর্তমান ঠিকানা'), $('#ef-guest-pres-addr'));
+            if (fields.present_country && fields.present_country.show && fields.present_country.req && !gPresCountry) markMissing(reqLbl('present_country', 'Present Country / বর্তমান দেশ'), $('#ef-guest-pres-country'));
+            if (fields.present_district && fields.present_district.show && fields.present_district.req && gPresCountry === 'Bangladesh' && !gPresDist) markMissing(reqLbl('present_district', 'Present District / বর্তমান জেলা'), $('#ef-guest-pres-dist'));
+            if (fields.present_upazila && fields.present_upazila.show && fields.present_upazila.req && gPresCountry === 'Bangladesh' && !gPresUpz) markMissing(reqLbl('present_upazila', 'Present Thana / Upazila / বর্তমান থানা/উপজেলা'), $('#ef-guest-pres-upazila'));
+            if (fields.permanent_address && fields.permanent_address.show && fields.permanent_address.req && !gPermAddr) markMissing(reqLbl('permanent_address', 'Permanent Address / স্থায়ী ঠিকানা'), $('#ef-guest-perm-addr'));
+            if (fields.permanent_country && fields.permanent_country.show && fields.permanent_country.req && !gPermCountry) markMissing(reqLbl('permanent_country', 'Permanent Country / স্থায়ী দেশ'), $('#ef-guest-perm-country'));
+            if (fields.permanent_district && fields.permanent_district.show && fields.permanent_district.req && gPermCountry === 'Bangladesh' && !gPermDist) markMissing(reqLbl('permanent_district', 'Permanent District / স্থায়ী জেলা'), $('#ef-guest-perm-dist'));
+            if (fields.permanent_upazila && fields.permanent_upazila.show && fields.permanent_upazila.req && gPermCountry === 'Bangladesh' && !gPermUpz) markMissing(reqLbl('permanent_upazila', 'Permanent Thana / Upazila / স্থায়ী থানা/উপজেলা'), $('#ef-guest-perm-upazila'));
+            if (fields.organization && fields.organization.show && fields.organization.req && !gOrg) markMissing(reqLbl('organization', 'Organization / প্রতিষ্ঠান'), $('#ef-guest-org'));
+            if (fields.position && fields.position.show && fields.position.req && !gPos) markMissing(reqLbl('position', 'Position / Designation / পদবি'), $('#ef-guest-pos'));
+            if (fields.industry && fields.industry.show && fields.industry.req && !gInd) markMissing(reqLbl('industry', 'Industry / সেক্টর'), $('#ef-guest-ind'));
+            if (fields.work_experience && fields.work_experience.show && fields.work_experience.req && !gExp) markMissing(reqLbl('work_experience', 'Work Experience / অভিজ্ঞতা'), $('#ef-guest-exp'));
+            if (fields.employment_address && fields.employment_address.show && fields.employment_address.req && !gEmpAddr) markMissing(reqLbl('employment_address', 'Organization Address / অফিসের ঠিকানা'), $('#ef-guest-emp-addr'));
+            if (fields.previous_organizations && fields.previous_organizations.show && fields.previous_organizations.req && !gPrevOrg) markMissing(reqLbl('previous_organizations', 'Previous Organizations / পূর্ববর্তী প্রতিষ্ঠান'), $('#ef-guest-prev-org'));
+            if (fields.about_me && fields.about_me.show && fields.about_me.req && !gAbout) markMissing(reqLbl('about_me', 'About Me / নিজের সম্পর্কে'), $('#ef-guest-about'));
+            if (fields.skills && fields.skills.show && fields.skills.req && !gSkills) markMissing(reqLbl('skills', 'Skills / দক্ষতা'), $('#ef-guest-skills'));
+            if (fields.facebook && fields.facebook.show && fields.facebook.req && !gFb) markMissing(reqLbl('facebook', 'Facebook URL / ফেসবুক লিঙ্ক'), $('#ef-guest-fb'));
+            if (fields.linkedin && fields.linkedin.show && fields.linkedin.req && !gLi) markMissing(reqLbl('linkedin', 'LinkedIn URL / লিংকডইন লিঙ্ক'), $('#ef-guest-li'));
+            if (fields.x && fields.x.show && fields.x.req && !gX) markMissing(reqLbl('x', 'X / Twitter URL'), $('#ef-guest-x'));
+            if (fields.website && fields.website.show && fields.website.req && !gWeb) markMissing(reqLbl('website', 'Personal Website / ওয়েবসাইট'), $('#ef-guest-web'));
+            if (fields.photo && fields.photo.show && fields.photo.req && !gPhoto) markMissing(reqLbl('photo', 'Photo (400x400) / ছবি'), $('#ef-guest-photo'));
 
             if (missingFields.length > 0) {
                 var missingListHtml = '<ul style="text-align:left; margin:10px 0 0; padding-left:22px; color:#dc2626; font-size:13.5px; line-height:1.8;">' +

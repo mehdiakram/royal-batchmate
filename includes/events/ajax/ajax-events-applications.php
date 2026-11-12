@@ -53,9 +53,20 @@ add_action( 'wp_ajax_puaa_get_event_applications',       'BatchMate_get_event_ap
 // ─────────────────────────────────────────────────────────────────────
 // 5. APPROVE EVENT APPLICATION
 // ─────────────────────────────────────────────────────────────────────
+if ( ! function_exists( 'batchmate_clean_nullable_text' ) ) {
+    function batchmate_clean_nullable_text( $val ): string {
+        $v = trim( (string) $val );
+        return ( $v === '' || strtolower( $v ) === 'null' ) ? '' : $v;
+    }
+}
+
 function BatchMate_approve_event_application_ajax() {
     batchmate_event_check_admin();
     global $wpdb;
+
+    if ( function_exists( 'batchmate_ensure_location_columns' ) ) {
+        batchmate_ensure_location_columns();
+    }
 
     $app_id = intval( $_POST['app_id'] ?? 0 );
     if ( ! $app_id ) wp_send_json_error( 'Invalid application ID.' );
@@ -113,10 +124,11 @@ function BatchMate_approve_event_application_ajax() {
         $applicant_phone = $raw->cell_number;
 
         // Check if member with this cell_number, email, or student_id already exists in batchmate_member
-        if ( ! empty( $raw->cell_number ) ) {
+        $raw_cell = trim( (string) ( $raw->cell_number ?? '' ) );
+        if ( ! empty( $raw_cell ) ) {
             $existing_mid = (int) $wpdb->get_var( $wpdb->prepare(
-                "SELECT id FROM $bm_member_table WHERE cell_number = %s LIMIT 1",
-                $raw->cell_number
+                "SELECT id FROM $bm_member_table WHERE TRIM(cell_number) = %s LIMIT 1",
+                $raw_cell
             ) );
         }
         if ( ! $existing_mid && ! empty( $raw->email ) ) {
@@ -231,25 +243,81 @@ function BatchMate_approve_event_application_ajax() {
                 throw new Exception( 'Non-member data not found in rawdata records.' );
             }
 
+            $existing_member_cols = $wpdb->get_col( "SHOW COLUMNS FROM $bm_member_table" );
+
             if ( $existing_mid > 0 ) {
                 $target_member_id = $existing_mid;
+                $existing_member  = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $bm_member_table WHERE id = %d", $target_member_id ) );
+
                 // Auto-sync: update existing member's photo and details with the fresh submission!
                 $upd_data = array();
-                if ( ! empty( $raw->photo_url ) )            $upd_data['photo_url'] = $raw->photo_url;
-                if ( ! empty( $raw->name ) )                 $upd_data['name'] = $raw->name;
-                if ( ! empty( $raw->name_bn ) )              $upd_data['name_bn'] = $raw->name_bn;
-                if ( ! empty( $raw->blood_group ) )          $upd_data['blood_group'] = $raw->blood_group;
-                if ( ! empty( $raw->gender ) )               $upd_data['gender'] = $raw->gender;
-                if ( ! empty( $raw->institution ) )          $upd_data['institution'] = $raw->institution;
-                if ( ! empty( $raw->present_district ) )     $upd_data['present_district'] = $raw->present_district;
-                if ( ! empty( $raw->permanent_district ) )   $upd_data['permanent_district'] = $raw->permanent_district;
-                if ( ! empty( $raw->present_address ) )      $upd_data['present_address'] = $raw->present_address;
-                if ( ! empty( $raw->permanent_address ) )    $upd_data['permanent_address'] = $raw->permanent_address;
-                if ( ! empty( $raw->upazila ) )              $upd_data['upazila'] = $raw->upazila;
-                if ( ! empty( $raw->present_upazila ) )      $upd_data['present_upazila'] = $raw->present_upazila;
-                if ( ! empty( $upd_data ) ) {
-                    $wpdb->update( $bm_member_table, $upd_data, array( 'id' => $target_member_id ) );
+                $sync_fields = array(
+                    'photo_url', 'name', 'name_bn', 'blood_group', 'gender', 'date_of_birth', 'religion',
+                    'land_phone_number', 'institution', 'board', 'roll_no', 'registration_no', 'edu_group',
+                    'present_address', 'permanent_address', 'present_country', 'permanent_country',
+                    'present_district', 'permanent_district', 'present_upazila', 'upazila',
+                    'organization', 'employment_position', 'industry', 'work_experience',
+                    'employment_address', 'previous_organizations', 'about_me', 'skills_json',
+                    'facebook_url', 'linkedin_url', 'x_url', 'website'
+                );
+                foreach ( $sync_fields as $sf ) {
+                    if ( isset( $raw->$sf ) ) {
+                        $val = batchmate_clean_nullable_text( $raw->$sf );
+                        if ( $val !== '' ) {
+                            $upd_data[ $sf ] = $val;
+                        }
+                    }
                 }
+
+                // Clear legacy literal 'null' strings in location columns if not replaced above
+                if ( $existing_member ) {
+                    foreach ( array( 'present_district', 'permanent_district', 'present_upazila', 'upazila' ) as $loc_col ) {
+                        if ( ! isset( $upd_data[ $loc_col ] ) && isset( $existing_member->$loc_col ) && strtolower( trim( (string) $existing_member->$loc_col ) ) === 'null' ) {
+                            $upd_data[ $loc_col ] = '';
+                        }
+                    }
+                }
+
+                // Sync email only if valid and not already assigned to another member
+                $raw_email = trim( (string) ( $raw->email ?? '' ) );
+                if ( ! empty( $raw_email ) && is_email( $raw_email ) ) {
+                    $email_owner = (int) $wpdb->get_var( $wpdb->prepare(
+                        "SELECT id FROM $bm_member_table WHERE email = %s AND id != %d LIMIT 1",
+                        $raw_email, $target_member_id
+                    ) );
+                    if ( ! $email_owner ) {
+                        $upd_data['email'] = $raw_email;
+                    }
+                }
+
+                if ( ! empty( $existing_member_cols ) ) {
+                    $upd_data = array_intersect_key( $upd_data, array_flip( $existing_member_cols ) );
+                }
+
+                if ( ! empty( $upd_data ) ) {
+                    $r_upd = $wpdb->update( $bm_member_table, $upd_data, array( 'id' => $target_member_id ) );
+                    if ( $r_upd === false ) {
+                        throw new Exception( 'Could not update existing member record: ' . $wpdb->last_error );
+                    }
+                }
+
+                // Keep linked WP user display name and photo meta in sync
+                if ( $existing_member && ! empty( $existing_member->wp_user_id ) ) {
+                    $wp_uid = (int) $existing_member->wp_user_id;
+                    if ( ! empty( $upd_data['name'] ) ) {
+                        $name_parts = explode( ' ', $upd_data['name'], 2 );
+                        wp_update_user( array(
+                            'ID'           => $wp_uid,
+                            'display_name' => $upd_data['name'],
+                            'first_name'   => $name_parts[0],
+                            'last_name'    => $name_parts[1] ?? '',
+                        ) );
+                    }
+                    if ( ! empty( $upd_data['photo_url'] ) ) {
+                        update_user_meta( $wp_uid, 'batchmate_member_photo', $upd_data['photo_url'] );
+                    }
+                }
+
                 // Update rawdata status
                 $wpdb->update( $rawdata_table, array( 'status' => 'approved' ), array( 'id' => $app->rawdata_id ), array( '%s' ), array( '%d' ) );
             } else {
@@ -358,6 +426,10 @@ function BatchMate_approve_event_application_ajax() {
                 if ( ! empty( $raw->x_url ) )              $new_member_insert['x_url'] = $raw->x_url;
                 if ( ! empty( $raw->website ) )            $new_member_insert['website'] = $raw->website;
 
+                if ( ! empty( $existing_member_cols ) ) {
+                    $new_member_insert = array_intersect_key( $new_member_insert, array_flip( $existing_member_cols ) );
+                }
+
                 $r_mem = $wpdb->insert( $bm_member_table, $new_member_insert );
                 if ( $r_mem === false ) {
                     throw new Exception( 'Could not create new member record: ' . $wpdb->last_error );
@@ -463,10 +535,16 @@ function BatchMate_get_event_members_ajax() {
             ev.has_tshirt,
             ev.has_saree,
             IF(em.member_id > 0, m.member_number, 'Non-Member') AS member_number,
-            IF(em.member_id > 0, m.name, r.name) AS name,
+            COALESCE(NULLIF(m.name, ''), r.name, '') AS name,
             IF(em.member_id > 0, m.photo_url, r.photo_url) AS photo_url,
-            IF(em.member_id > 0, COALESCE(NULLIF(m.permanent_district, ''), NULLIF(m.present_district, ''), ''), COALESCE(NULLIF(r.permanent_district, ''), NULLIF(r.present_district, ''), '')) AS dept_name,
-            IF(em.member_id > 0, COALESCE(NULLIF(m.permanent_district, ''), NULLIF(m.present_district, ''), ''), COALESCE(NULLIF(r.permanent_district, ''), NULLIF(r.present_district, ''), '')) AS district,
+            IF(em.member_id > 0,
+                COALESCE(NULLIF(NULLIF(NULLIF(TRIM(m.permanent_district), ''), 'null'), 'NULL'), NULLIF(NULLIF(NULLIF(TRIM(m.present_district), ''), 'null'), 'NULL'), ''),
+                COALESCE(NULLIF(NULLIF(NULLIF(TRIM(r.permanent_district), ''), 'null'), 'NULL'), NULLIF(NULLIF(NULLIF(TRIM(r.present_district), ''), 'null'), 'NULL'), '')
+            ) AS dept_name,
+            IF(em.member_id > 0,
+                COALESCE(NULLIF(NULLIF(NULLIF(TRIM(m.permanent_district), ''), 'null'), 'NULL'), NULLIF(NULLIF(NULLIF(TRIM(m.present_district), ''), 'null'), 'NULL'), ''),
+                COALESCE(NULLIF(NULLIF(NULLIF(TRIM(r.permanent_district), ''), 'null'), 'NULL'), NULLIF(NULLIF(NULLIF(TRIM(r.present_district), ''), 'null'), 'NULL'), '')
+            ) AS district,
             '' AS program_name,
             '' AS batch,
             IF(em.member_id > 0, m.cell_number, r.cell_number) AS cell_number,
@@ -645,12 +723,12 @@ function BatchMate_submit_event_application_ajax() {
         $g_dob       = sanitize_text_field( $_POST['guest_dob']       ?? '' );
         $g_pres_addr = sanitize_text_field( $_POST['guest_present_address']   ?? '' );
         $g_perm_addr = sanitize_text_field( $_POST['guest_permanent_address'] ?? '' );
-        $g_pres_dist = sanitize_text_field( $_POST['guest_present_district']  ?? '' );
-        $g_perm_dist = sanitize_text_field( $_POST['guest_permanent_district'] ?? '' );
-        $g_pres_country = sanitize_text_field( $_POST['guest_present_country'] ?? 'Bangladesh' );
-        $g_pres_upz     = sanitize_text_field( $_POST['guest_present_upazila'] ?? '' );
-        $g_perm_country = sanitize_text_field( $_POST['guest_permanent_country'] ?? 'Bangladesh' );
-        $g_perm_upz     = sanitize_text_field( $_POST['guest_upazila'] ?? '' );
+        $g_pres_dist = batchmate_clean_nullable_text( sanitize_text_field( $_POST['guest_present_district']  ?? '' ) );
+        $g_perm_dist = batchmate_clean_nullable_text( sanitize_text_field( $_POST['guest_permanent_district'] ?? '' ) );
+        $g_pres_country = batchmate_clean_nullable_text( sanitize_text_field( $_POST['guest_present_country'] ?? 'Bangladesh' ) ) ?: 'Bangladesh';
+        $g_pres_upz     = batchmate_clean_nullable_text( sanitize_text_field( $_POST['guest_present_upazila'] ?? '' ) );
+        $g_perm_country = batchmate_clean_nullable_text( sanitize_text_field( $_POST['guest_permanent_country'] ?? 'Bangladesh' ) ) ?: 'Bangladesh';
+        $g_perm_upz     = batchmate_clean_nullable_text( sanitize_text_field( $_POST['guest_upazila'] ?? '' ) );
         $g_name_bn   = sanitize_text_field( $_POST['guest_name_bn'] ?? '' );
         $g_religion  = sanitize_text_field( $_POST['guest_religion'] ?? '' );
         $g_land      = sanitize_text_field( $_POST['guest_land_phone'] ?? '' );

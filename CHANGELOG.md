@@ -2,6 +2,14 @@
 
 All notable changes to the **Royal BatchMate** plugin will be documented in this file.
 
+## [26.11.22] - 2026-11-12
+
+### Fixed
+- **Existing Member Auto-Sync on Event Approval:** Fixed silent update failures when approving direct registrations matching an existing member by running `batchmate_ensure_location_columns()` prior to the transaction, filtering update/insert payloads against `SHOW COLUMNS`, checking update results, syncing all submitted profile fields (including English name, Bangla name, districts, and photo) plus linked WP user display name/avatar meta, and clearing legacy literal `'null'` district values.
+- **District Display & Summary Fallback:** Ignored literal `'null'`/`'NULL'` strings when reading `permanent_district` and `present_district` in Registered Members DataTable and District-wise Registration Summary so valid `present_district` values display properly instead of `null`.
+- **Database Migration Column Order:** Fixed `batchmate_ensure_location_columns()` to add `present_district` and `permanent_district` before `present_upazila`, `upazila`, `present_country`, and `permanent_country`.
+- **Dynamic Event Form Field Labels:** Updated `[event_form]` (`shortcode-event-form.php` and `shortcode-event-form.js`) to load all configured labels via `batchmate_get_field_label()` (such as `Name (English)` and `Cell Number`) and render them dynamically in both form labels and validation alerts.
+
 ## [26.11.21] - 2026-11-12
 
 ### Added & Improved

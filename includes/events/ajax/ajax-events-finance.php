@@ -250,8 +250,8 @@ function BatchMate_get_dept_registration_summary_ajax() {
         SELECT
             COALESCE(
                 NULLIF(IF(em.member_id > 0, 
-                    COALESCE(NULLIF(m.permanent_district, ''), NULLIF(m.present_district, '')), 
-                    COALESCE(NULLIF(r.permanent_district, ''), NULLIF(r.present_district, ''))
+                    COALESCE(NULLIF(NULLIF(NULLIF(TRIM(m.permanent_district), ''), 'null'), 'NULL'), NULLIF(NULLIF(NULLIF(TRIM(m.present_district), ''), 'null'), 'NULL')), 
+                    COALESCE(NULLIF(NULLIF(NULLIF(TRIM(r.permanent_district), ''), 'null'), 'NULL'), NULLIF(NULLIF(NULLIF(TRIM(r.present_district), ''), 'null'), 'NULL'))
                 ), ''),
                 'Other'
             ) AS dept_name,
