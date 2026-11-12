@@ -60,12 +60,14 @@ function BatchMate_approve_event_application_ajax() {
     $app_id = intval( $_POST['app_id'] ?? 0 );
     if ( ! $app_id ) wp_send_json_error( 'Invalid application ID.' );
 
-    $app_table    = $wpdb->prefix . 'batchmate_event_application';
-    $member_table = $wpdb->prefix . 'batchmate_event_members';
+    $app_table       = $wpdb->prefix . 'batchmate_event_application';
+    $member_table    = $wpdb->prefix . 'batchmate_event_members';
+    $bm_member_table = $wpdb->prefix . 'batchmate_member';
+    $rawdata_table   = $wpdb->prefix . 'batchmate_rawdata';
 
     $app = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $app_table WHERE id = %d", $app_id ) );
     if ( ! $app ) wp_send_json_error( 'Application not found.' );
-    if ( $app->status === 'approved' ) wp_send_json_error( 'Already approved.' );
+    if ( $app->status === 'approved' ) wp_send_json_error( 'This application has already been approved.' );
 
     // Fetch event
     $event = $wpdb->get_row( $wpdb->prepare(
@@ -74,12 +76,145 @@ function BatchMate_approve_event_application_ajax() {
     ) );
     if ( ! $event ) wp_send_json_error( 'Event not found.' );
 
-    // Duplicate check in event_members
-    $exists = $wpdb->get_var( $wpdb->prepare(
-        "SELECT COUNT(id) FROM $member_table WHERE event_id = %d AND member_id = %d AND rawdata_id = %d",
-        $app->event_id, $app->member_id, $app->rawdata_id
+    // Self-heal check: if this application ID is already in event_members, sync status to approved
+    $already_in_event = $wpdb->get_row( $wpdb->prepare(
+        "SELECT serial_no FROM $member_table WHERE event_id = %d AND application_id = %d",
+        $app->event_id, $app->id
     ) );
-    if ( $exists > 0 ) wp_send_json_error( 'Member/Non-Member already registered for this event.' );
+    if ( $already_in_event ) {
+        $wpdb->update( $app_table, array( 'status' => 'approved' ), array( 'id' => $app->id ), array( '%s' ), array( '%d' ) );
+        wp_send_json_error( sprintf( 'This application is already approved and registered (Serial #%d). Status updated to approved.', $already_in_event->serial_no ) );
+    }
+
+    $applicant_email = '';
+    $applicant_phone = '';
+    $applicant_name  = '';
+    $existing_mid    = 0;
+    $raw             = null;
+
+    if ( $app->member_id > 0 ) {
+        $cur_member = $wpdb->get_row( $wpdb->prepare(
+            "SELECT id, name, email, cell_number FROM $bm_member_table WHERE id = %d",
+            $app->member_id
+        ) );
+        if ( $cur_member ) {
+            $applicant_name  = $cur_member->name;
+            $applicant_email = $cur_member->email;
+            $applicant_phone = $cur_member->cell_number;
+            $existing_mid    = (int) $cur_member->id;
+        }
+    } elseif ( $app->rawdata_id > 0 ) {
+        $raw = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $rawdata_table WHERE id = %d", $app->rawdata_id ) );
+        if ( ! $raw ) {
+            wp_send_json_error( 'Non-member data not found in rawdata records.' );
+        }
+        $applicant_name  = $raw->name;
+        $applicant_email = $raw->email;
+        $applicant_phone = $raw->cell_number;
+
+        // Check if member with this cell_number, email, or student_id already exists in batchmate_member
+        if ( ! empty( $raw->cell_number ) ) {
+            $existing_mid = (int) $wpdb->get_var( $wpdb->prepare(
+                "SELECT id FROM $bm_member_table WHERE cell_number = %s LIMIT 1",
+                $raw->cell_number
+            ) );
+        }
+        if ( ! $existing_mid && ! empty( $raw->email ) ) {
+            $existing_mid = (int) $wpdb->get_var( $wpdb->prepare(
+                "SELECT id FROM $bm_member_table WHERE email = %s LIMIT 1",
+                $raw->email
+            ) );
+        }
+        if ( ! $existing_mid && ! empty( $raw->student_id ) ) {
+            $existing_mid = (int) $wpdb->get_var( $wpdb->prepare(
+                "SELECT id FROM $bm_member_table WHERE student_id = %s LIMIT 1",
+                $raw->student_id
+            ) );
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // DUPLICATE CHECKS: Inform admin if this person is already registered
+    // ─────────────────────────────────────────────────────────────────
+
+    // 1. By Email (check if email is already registered in this event)
+    if ( ! empty( $applicant_email ) && is_email( $applicant_email ) ) {
+        $reg_by_email = $wpdb->get_row( $wpdb->prepare(
+            "SELECT em.serial_no, COALESCE(m.name, r.name) AS reg_name
+             FROM $member_table em
+             LEFT JOIN $bm_member_table m ON em.member_id = m.id AND em.member_id > 0
+             LEFT JOIN $rawdata_table r ON em.rawdata_id = r.id AND em.rawdata_id > 0
+             WHERE em.event_id = %d AND (m.email = %s OR r.email = %s)
+             LIMIT 1",
+            $app->event_id, $applicant_email, $applicant_email
+        ) );
+        if ( $reg_by_email ) {
+            wp_send_json_error( sprintf(
+                'The email "%s" is already registered for this event (Name: %s, Serial #%d).',
+                $applicant_email,
+                $reg_by_email->reg_name ?: 'Registered Member',
+                $reg_by_email->serial_no
+            ) );
+        }
+    }
+
+    // 2. By Phone / Cell number (check if phone is already registered in this event)
+    if ( ! empty( $applicant_phone ) ) {
+        $clean_phone = preg_replace( '/[^0-9]/', '', $applicant_phone );
+        if ( strlen( $clean_phone ) >= 10 ) {
+            $phone_tail = substr( $clean_phone, -10 );
+            $reg_by_phone = $wpdb->get_row( $wpdb->prepare(
+                "SELECT em.serial_no, COALESCE(m.name, r.name) AS reg_name
+                 FROM $member_table em
+                 LEFT JOIN $bm_member_table m ON em.member_id = m.id AND em.member_id > 0
+                 LEFT JOIN $rawdata_table r ON em.rawdata_id = r.id AND em.rawdata_id > 0
+                 WHERE em.event_id = %d AND (
+                     m.cell_number LIKE %s OR r.cell_number LIKE %s
+                 )
+                 LIMIT 1",
+                $app->event_id, '%' . $phone_tail, '%' . $phone_tail
+            ) );
+            if ( $reg_by_phone ) {
+                wp_send_json_error( sprintf(
+                    'The phone number "%s" is already registered for this event (Name: %s, Serial #%d).',
+                    $applicant_phone,
+                    $reg_by_phone->reg_name ?: 'Registered Member',
+                    $reg_by_phone->serial_no
+                ) );
+            }
+        }
+    }
+
+    // 3. By Member ID
+    if ( $existing_mid > 0 ) {
+        $reg_by_mid = $wpdb->get_row( $wpdb->prepare(
+            "SELECT serial_no FROM $member_table WHERE event_id = %d AND member_id = %d",
+            $app->event_id, $existing_mid
+        ) );
+        if ( $reg_by_mid ) {
+            wp_send_json_error( sprintf(
+                'Member "%s" (ID: %d) is already registered for this event (Serial #%d).',
+                $applicant_name ?: 'Member',
+                $existing_mid,
+                $reg_by_mid->serial_no
+            ) );
+        }
+    }
+
+    // 4. By Rawdata ID
+    if ( $app->rawdata_id > 0 ) {
+        $reg_by_raw = $wpdb->get_row( $wpdb->prepare(
+            "SELECT serial_no FROM $member_table WHERE event_id = %d AND rawdata_id = %d",
+            $app->event_id, $app->rawdata_id
+        ) );
+        if ( $reg_by_raw ) {
+            wp_send_json_error( sprintf(
+                'Applicant "%s" is already registered for this event (Serial #%d).',
+                $applicant_name ?: 'Guest',
+                $reg_by_raw->serial_no
+            ) );
+        }
+    }
 
     $new_user_login_info = null;
     $target_member_id    = intval( $app->member_id );
@@ -89,33 +224,11 @@ function BatchMate_approve_event_application_ajax() {
         // Option 2 & 3 & 4: If allow_non_members >= 2 and applicant is a guest (member_id == 0 && rawdata_id > 0)
         // Automatically convert guest to full club member and create WP user!
         if ( intval( $event->allow_non_members ) >= 2 && $app->member_id == 0 && $app->rawdata_id > 0 ) {
-            $rawdata_table   = $wpdb->prefix . 'batchmate_rawdata';
-            $bm_member_table = $wpdb->prefix . 'batchmate_member';
-
-            $raw = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $rawdata_table WHERE id = %d", $app->rawdata_id ) );
-            if ( ! raw ) {
+            if ( ! $raw ) {
+                $raw = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $rawdata_table WHERE id = %d", $app->rawdata_id ) );
+            }
+            if ( ! $raw ) {
                 throw new Exception( 'Non-member data not found in rawdata records.' );
-            }
-
-            // Check if member with this cell_number, email, or student_id already exists in batchmate_member
-            $existing_mid = 0;
-            if ( ! empty( $raw->cell_number ) ) {
-                $existing_mid = (int) $wpdb->get_var( $wpdb->prepare(
-                    "SELECT id FROM $bm_member_table WHERE cell_number = %s LIMIT 1",
-                    $raw->cell_number
-                ) );
-            }
-            if ( ! $existing_mid && ! empty( $raw->email ) ) {
-                $existing_mid = (int) $wpdb->get_var( $wpdb->prepare(
-                    "SELECT id FROM $bm_member_table WHERE email = %s LIMIT 1",
-                    $raw->email
-                ) );
-            }
-            if ( ! $existing_mid && ! empty( $raw->student_id ) ) {
-                $existing_mid = (int) $wpdb->get_var( $wpdb->prepare(
-                    "SELECT id FROM $bm_member_table WHERE student_id = %s LIMIT 1",
-                    $raw->student_id
-                ) );
             }
 
             if ( $existing_mid > 0 ) {
@@ -160,6 +273,9 @@ function BatchMate_approve_event_application_ajax() {
                 $username = sanitize_user( strtolower( $member_number ), true );
 
                 $email_to_use = ! empty( $raw->email ) ? $raw->email : ( function_exists( 'batchmate_generate_member_email' ) ? batchmate_generate_member_email( $member_number ) : '' );
+                if ( empty( $email_to_use ) ) {
+                    $email_to_use = strtolower( $member_number ) . '@batchmate.local';
+                }
 
                 if ( ! empty( $email_to_use ) ) {
                     $existing_uid = email_exists( $email_to_use );
@@ -272,7 +388,7 @@ function BatchMate_approve_event_application_ajax() {
             'approved_by'    => get_current_user_id(),
         ), array( '%d', '%d', '%d', '%d', '%d', '%d' ) );
 
-        if ( $r1 === false ) throw new Exception( 'Could not insert into event members.' );
+        if ( $r1 === false ) throw new Exception( 'Could not insert into event members: ' . $wpdb->last_error );
 
         // Update application status
         $r2 = $wpdb->update( $app_table, array( 'status' => 'approved' ), array( 'id' => $app_id ), array( '%s' ), array( '%d' ) );
@@ -280,15 +396,19 @@ function BatchMate_approve_event_application_ajax() {
 
         $wpdb->query( 'COMMIT' );
 
-        // â”€â”€ Send approval email (includes event card attachment & login credentials if converted) â”€â”€
-        BatchMate_send_event_confirmation_email( $app_id, $next_serial, $new_user_login_info );
+        // Send approval email safely inside try-catch so email delivery issues don't crash approval response
+        try {
+            BatchMate_send_event_confirmation_email( $app_id, $next_serial, $new_user_login_info );
+        } catch ( \Throwable $email_e ) {
+            error_log( 'BatchMate Event Email Error: ' . $email_e->getMessage() );
+        }
 
         $resp_msg = 'Application approved and member registered.';
         if ( $new_user_login_info ) {
             $resp_msg .= ' Non-member converted to Member (' . $new_user_login_info['member_number'] . ') with user account.';
         }
         wp_send_json_success( $resp_msg );
-    } catch ( Exception $e ) {
+    } catch ( \Throwable $e ) {
         $wpdb->query( 'ROLLBACK' );
         wp_send_json_error( $e->getMessage() );
     }
@@ -629,7 +749,7 @@ function BatchMate_submit_event_application_ajax() {
         if ( ! empty( $g_emp_addr ) )  $rawdata_arr['employment_address'] = $g_emp_addr;
         if ( ! empty( $g_prev_org ) )  $rawdata_arr['previous_organizations'] = $g_prev_org;
         if ( ! empty( $g_about ) )     $rawdata_arr['about_me'] = $g_about;
-        if ( ! empty( $g_skills ) )    $rawdata_arr['skills_json'] = $g_skills;
+        if ( ! empty( $g_skills ) )    $rawdata_arr['skills_json'] = wp_json_encode( array_values( array_filter( array_map( 'trim', explode( ',', $g_skills ) ) ) ) );
         if ( ! empty( $g_fb ) )        $rawdata_arr['facebook_url'] = $g_fb;
         if ( ! empty( $g_li ) )        $rawdata_arr['linkedin_url'] = $g_li;
         if ( ! empty( $g_x ) )         $rawdata_arr['x_url'] = $g_x;
@@ -656,8 +776,67 @@ function BatchMate_submit_event_application_ajax() {
             $event_id, $member_id
         ) );
         if ( $exists > 0 ) wp_send_json_error( 'You have already applied for this event.' );
+
+        // Also check event_members (approved registrants) for this member
+        $reg_exists = $wpdb->get_var( $wpdb->prepare(
+            "SELECT COUNT(id) FROM {$wpdb->prefix}batchmate_event_members WHERE event_id = %d AND member_id = %d",
+            $event_id, $member_id
+        ) );
+        if ( $reg_exists > 0 ) wp_send_json_error( 'You are already registered for this event.' );
+
     } else if ( $rawdata_id > 0 ) {
-        // Can a guest apply twice? For safety, we just created the rawdata, so it's a new entry anyway.
+        // Guest duplicate check: prevent same email or phone from submitting twice
+        $guest_cell_check  = sanitize_text_field( $_POST['guest_cell'] ?? '' );
+        $guest_email_check = sanitize_email( $_POST['guest_email'] ?? '' );
+
+        // Check by phone in existing applications (via rawdata)
+        if ( ! empty( $guest_cell_check ) ) {
+            $dup_by_phone = $wpdb->get_var( $wpdb->prepare(
+                "SELECT ea.id FROM {$wpdb->prefix}batchmate_event_application ea
+                 LEFT JOIN {$wpdb->prefix}batchmate_rawdata rd ON ea.rawdata_id = rd.id
+                 WHERE ea.event_id = %d AND rd.cell_number = %s
+                 AND ea.rawdata_id != %d
+                 LIMIT 1",
+                $event_id, $guest_cell_check, $rawdata_id
+            ) );
+            if ( $dup_by_phone ) {
+                // Rollback the rawdata insert we just did since it's a duplicate
+                $wpdb->delete( $wpdb->prefix . 'batchmate_rawdata', array( 'id' => $rawdata_id ), array( '%d' ) );
+                wp_send_json_error( 'A registration with this mobile number already exists for this event. Please contact the organizer if this is a mistake.' );
+            }
+        }
+
+        // Check by email in existing applications (via rawdata)
+        if ( ! empty( $guest_email_check ) && is_email( $guest_email_check ) ) {
+            $dup_by_email = $wpdb->get_var( $wpdb->prepare(
+                "SELECT ea.id FROM {$wpdb->prefix}batchmate_event_application ea
+                 LEFT JOIN {$wpdb->prefix}batchmate_rawdata rd ON ea.rawdata_id = rd.id
+                 WHERE ea.event_id = %d AND rd.email = %s
+                 AND ea.rawdata_id != %d
+                 LIMIT 1",
+                $event_id, $guest_email_check, $rawdata_id
+            ) );
+            if ( $dup_by_email ) {
+                // Rollback the rawdata insert we just did since it's a duplicate
+                $wpdb->delete( $wpdb->prefix . 'batchmate_rawdata', array( 'id' => $rawdata_id ), array( '%d' ) );
+                wp_send_json_error( 'A registration with this email address already exists for this event. Please contact the organizer if this is a mistake.' );
+            }
+        }
+
+        // Also check event_members (approved) for this guest phone/email
+        if ( ! empty( $guest_email_check ) && is_email( $guest_email_check ) ) {
+            $reg_by_email = $wpdb->get_var( $wpdb->prepare(
+                "SELECT em.id FROM {$wpdb->prefix}batchmate_event_members em
+                 LEFT JOIN {$wpdb->prefix}batchmate_rawdata rd ON em.rawdata_id = rd.id
+                 WHERE em.event_id = %d AND rd.email = %s
+                 LIMIT 1",
+                $event_id, $guest_email_check
+            ) );
+            if ( $reg_by_email ) {
+                $wpdb->delete( $wpdb->prefix . 'batchmate_rawdata', array( 'id' => $rawdata_id ), array( '%d' ) );
+                wp_send_json_error( 'You are already registered for this event.' );
+            }
+        }
     }
 
     $result = $wpdb->insert(

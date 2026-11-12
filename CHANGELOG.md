@@ -2,6 +2,34 @@
 
 All notable changes to the **Royal BatchMate** plugin will be documented in this file.
 
+## [26.11.21] - 2026-11-12
+
+### Added & Improved
+- **Payment Method Summary Card & Print:** Added a side-by-side **পেমেন্ট সামারি (Payment Method Breakdown)** card next to the **T-Shirt / শাড়ি Summary** in Registered Members, along with dedicated Print support and Saree (`👘 শাড়ি`) breakdown counts.
+- **Permanent District Priority:** Prioritized `permanent_district` (স্থায়ী জেলা) over `present_district` across the Registered Members table, print sheets, and **District-wise Registration** summary.
+- **Modular Code Architecture & Asset Caching:** Refactored large monolithic files into cleanly separated, cache-busted (`filemtime`) CSS and JS assets:
+  - Split `assets/admin-events.js` into 6 focused modules under `assets/events/` (`events-core.js`, `events-registered.js`, `events-applications.js`, `events-crud.js`, `events-card.js`, `events-finance.js`).
+  - Extracted inline CSS/JS from `includes/shortcodes/shortcode-event-form.php` into `assets/shortcode-event-form.css` and `assets/shortcode-event-form.js`.
+  - Extracted inline JS from `includes/admin-members-list-page.php` into `assets/admin-members-list.js`.
+  - Extracted inline CSS/JS from `templates/single-member.php` into `assets/single-member.css` and `assets/single-member.js`.
+
+### Fixed
+- **Event Management AJAX Handlers:** Registered missing admin/public AJAX handler files in `royal-batchmate.php` resolving DataTables AJAX loading errors.
+- **Print Table Alignment & Footer Label:** Fixed print table column/grand-total (`tfoot`) alignment across Print List and Print List with Amount, and fixed literal `${...}` JavaScript template expression appearing in the print footer.
+- **Desktop Table Horizontal Scrollbar:** Improved responsive table container rules in `assets/admin-events.css` to avoid unnecessary horizontal scrollbars on desktop (`>=1200px`).
+
+## [26.11.20] - 2026-11-12
+
+### Added & Improved
+- **Event Form Submission State & UX:** When submitting an event application, the submit button is immediately made readonly/disabled with duplicate-click protection, displaying `<span class="ef-btn-spinner"></span> সাবমিট হচ্ছে...`.
+- **Auto-Scroll to Success Notification:** Upon successful application submission, the page smoothly auto-scrolls up to the success banner showing `✓ Your application has been submitted successfully. Please wait for approval.`, preventing users from getting lost at the website footer.
+- **Robust Error Handling & State Recovery:** If submission encounters validation or network errors, the button gracefully restores its original state and text, and displays the error notice without losing user inputs.
+
+## [26.11.19] - 2026-11-12
+
+### Fixed
+- **Database Query & Placeholder Mismatch:** Fixed missing `LEFT JOIN` on `batchmate_program` table across member login shortcode, member profile page, application AJAX list, application print, and member print templates that caused `Unknown column 'p.program_name'` and `wpdb::prepare` argument mismatch warnings. Fixed invalid `GROUP BY` syntax in admin programs AJAX.
+
 ## [26.11.18] - 2026-11-12
 
 ### Fixed

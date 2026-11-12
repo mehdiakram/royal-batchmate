@@ -258,9 +258,28 @@ include_once $events_dir . 'modals/modal-transaction.php';
      ASSETS & RUNTIME CONFIGURATION
 ============================================================ -->
 <?php
+$bm_events_css_ver = defined( 'ROYAL_BATCHMATE_VERSION' ) ? ROYAL_BATCHMATE_VERSION . '.' . (string) @filemtime( ROYAL_BATCHMATE_PLUGIN_DIR . 'assets/admin-events.css' ) : (string) time();
+wp_enqueue_style( 'batchmate-admin-events-css', ROYAL_BATCHMATE_PLUGIN_URL . 'assets/admin-events.css', [ 'admin-css' ], $bm_events_css_ver );
+
+$bm_base_deps = [ 'jquery', 'datatables-js', 'sweetalert2-js', 'select2-js' ];
+$bm_ev_modules = [
+    'batchmate-events-core'         => 'assets/events/events-core.js',
+    'batchmate-events-registered'   => 'assets/events/events-registered.js',
+    'batchmate-events-applications' => 'assets/events/events-applications.js',
+    'batchmate-events-crud'         => 'assets/events/events-crud.js',
+    'batchmate-events-card'         => 'assets/events/events-card.js',
+    'batchmate-events-finance'      => 'assets/events/events-finance.js',
+];
+
+$prev_handle = $bm_base_deps;
+foreach ( $bm_ev_modules as $handle => $rel_path ) {
+    $mod_ver = defined( 'ROYAL_BATCHMATE_VERSION' ) ? ROYAL_BATCHMATE_VERSION . '.' . (string) @filemtime( ROYAL_BATCHMATE_PLUGIN_DIR . $rel_path ) : (string) time();
+    wp_enqueue_script( $handle, ROYAL_BATCHMATE_PLUGIN_URL . $rel_path, $prev_handle, $mod_ver, true );
+    $prev_handle = [ $handle ];
+}
+
 $bm_events_ver = defined( 'ROYAL_BATCHMATE_VERSION' ) ? ROYAL_BATCHMATE_VERSION . '.' . (string) @filemtime( ROYAL_BATCHMATE_PLUGIN_DIR . 'assets/admin-events.js' ) : (string) time();
-wp_enqueue_style( 'batchmate-admin-events-css', ROYAL_BATCHMATE_PLUGIN_URL . 'assets/admin-events.css', [ 'admin-css' ], $bm_events_ver );
-wp_enqueue_script( 'batchmate-admin-events-js', ROYAL_BATCHMATE_PLUGIN_URL . 'assets/admin-events.js', [ 'jquery', 'datatables-js', 'sweetalert2-js', 'select2-js' ], $bm_events_ver, true );
+wp_enqueue_script( 'batchmate-admin-events-js', ROYAL_BATCHMATE_PLUGIN_URL . 'assets/admin-events.js', [ 'batchmate-events-finance' ], $bm_events_ver, true );
 ?>
 <script type="text/javascript">
 window.batchmate_events_cfg = window.batchmate_events_cfg || {
